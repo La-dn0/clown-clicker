@@ -79,19 +79,31 @@
 
     .rank-badge {
       background: var(--card);
-      border: 1px solid #2f3542;
+      border: 1px solid var(--accent);
       padding: 4px 8px;
       border-radius: 20px;
       font-size: 11px;
       font-weight: 700;
       color: var(--accent);
       white-space: nowrap;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      transition: transform 0.1s, background 0.1s;
     }
+    .rank-badge:active { transform: scale(0.95); background: #202b3c; }
 
     .score-container {
-      font-size: 32px;
+      font-size: 30px;
       font-weight: 800;
       margin-top: 1px;
+    }
+    .target-subtext {
+      font-size: 11px;
+      color: var(--subtext);
+      margin-top: -2px;
+      font-weight: 600;
     }
 
     .currencies-row {
@@ -101,7 +113,7 @@
       gap: 8px;
       font-size: 11px;
       color: var(--subtext);
-      margin-top: 2px;
+      margin-top: 3px;
     }
 
     .combo-badge {
@@ -178,7 +190,7 @@
     .floating-text {
       position: absolute;
       font-weight: 800;
-      font-size: 20px;
+      font-size: 18px;
       color: var(--accent);
       pointer-events: none;
       animation: floatUp 0.7s ease-out forwards;
@@ -245,18 +257,9 @@
       cursor: pointer;
       transition: background 0.1s, border-color 0.1s;
     }
-    .card-item:active {
-      background: #1b2537;
-      border-color: var(--accent);
-    }
-    .card-item.clickable-card * {
-      pointer-events: none;
-    }
-    .card-item.disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-      pointer-events: none;
-    }
+    .card-item:active { background: #1b2537; border-color: var(--accent); }
+    .card-item.clickable-card * { pointer-events: none; }
+    .card-item.disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
     .card-item button {
       background: #202b3c;
       border: 1px solid var(--accent);
@@ -343,73 +346,79 @@
       padding-bottom: 8px;
     }
     .guide-section:last-child { border-bottom: none; }
-    .guide-title {
-      font-size: 12px;
-      font-weight: bold;
-      color: var(--accent);
-      margin-bottom: 3px;
-    }
-    .guide-text {
-      font-size: 11px;
-      color: #c8d6e5;
-      line-height: 1.35;
-    }
+    .guide-title { font-size: 12px; font-weight: bold; color: var(--accent); margin-bottom: 3px; }
+    .guide-text { font-size: 11px; color: #c8d6e5; line-height: 1.35; }
 
-    .daily-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 6px;
-      margin: 10px 0;
-    }
-    .daily-day {
+    .ranks-list { display: flex; flex-direction: column; gap: 7px; margin: 12px 0; text-align: left; }
+    .rank-card {
       background: #0f1520;
       border: 1px solid #2f3542;
-      border-radius: 6px;
-      padding: 6px 2px;
-      font-size: 10px;
-      color: var(--subtext);
+      border-radius: 8px;
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
     }
+    .rank-card.current {
+      border-color: var(--accent);
+      background: #1e2837;
+      box-shadow: 0 0 10px rgba(245, 166, 35, 0.2);
+    }
+    .rank-card.passed { border-color: #2ed573; }
+    .rank-card-header { display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: bold; }
+    .rank-card-reward { font-size: 10px; color: #a4b0be; }
+    .rank-card-reward b { color: var(--energy); }
+
+    .daily-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 10px 0; }
+    .daily-day { background: #0f1520; border: 1px solid #2f3542; border-radius: 6px; padding: 6px 2px; font-size: 10px; color: var(--subtext); }
     .daily-day.claimed { border-color: var(--energy); color: var(--energy); }
     .daily-day.current { border-color: var(--accent); background: #202b3c; color: #fff; }
   </style>
 </head>
 <body id="gameBody">
 
-  <!-- Окно Помощи -->
+  <div class="modal-overlay" id="ranksModal">
+    <div class="modal-card">
+      <h3 style="color: var(--accent);">🏆 Дорога Рангов</h3>
+      <p style="font-size: 11px; color: var(--subtext); margin-top: 2px;">Побеждай боссов и поднимайся в высшую лигу:</p>
+      <div class="ranks-list" id="ranksListContainer"></div>
+      <button class="modal-btn" onclick="document.getElementById('ranksModal').style.display='none'">ЗАКРЫТЬ</button>
+    </div>
+  </div>
+
   <div class="modal-overlay" id="helpModal">
     <div class="modal-card">
       <h3 style="color: var(--accent);">📖 Руководство Игрока</h3>
-      <p style="font-size: 11px; color: var(--subtext); margin-top: 2px;">Как выбраться со Дна в Претенденты:</p>
+      <p style="font-size: 11px; color: var(--subtext); margin-top: 2px;">Как не застрять на Дне Палаты:</p>
 
       <div class="guide-section">
         <div class="guide-title">⚡ LP и Энергия</div>
         <div class="guide-text">
-          Каждый клик стоит 1 энергию. Частые тапы разгоняют комбо-множитель до x2.5! Энергия восстанавливается сама каждую секунду.
+          Каждый клик тратит <b>2 энергии</b>. Быстрые клики разгоняют комбо до x2.5! Если энергия на нуле — кликать нельзя, жди регена или печеньку.
         </div>
       </div>
 
       <div class="guide-section">
-        <div class="guide-title">⚔️ Промо-боссы</div>
+        <div class="guide-title">⚔️ Промо-боссы (Повышение ранга)</div>
         <div class="guide-text">
-          Набираешь 100 LP — запускается битва. Успей за 20 секунд снести HP боссу, чтобы апнуть ранг и получить Ключ! Если не успел — откат на 70 LP.
+          Для каждого ранга нужен свой порог LP (он растёт!). У вас есть 20 секунд, чтобы снести боссу HP. <b>Качайте урон заранее!</b> Если босс не убит — откат очков.
         </div>
       </div>
 
       <div class="guide-section">
-        <div class="guide-title">🦸 Герои и 🔷 Осколки Мастери</div>
+        <div class="guide-title">🦸 Чемпионы за 🔷 Осколки</div>
         <div class="guide-text">
-          Смена стоит <b>2 🔷 Осколка</b> (зарабатываются в Смурфинге):<br>
-          • <b>Ясик:</b> мощное комбо тапа.<br>
+          Смена стоит <b>2 🔷 Осколка</b> (добываются через Смурфинг):<br>
+          • <b>Ясик:</b> быстрые комбо-серии.<br>
           • <b>Кот-Хукер:</b> ворует LP каждые 20 сек.<br>
-          • <b>Мальфит:</b> 1500 энергии и тройной урон по боссам.
+          • <b>Мальфит:</b> 1500 энергии и <b>x3 урон по боссам</b> (идеален для сложных промо!).
         </div>
       </div>
 
       <div class="guide-section">
-        <div class="guide-title">🐉 События и Чат</div>
+        <div class="guide-title">🔄 Смурфинг (Престиж)</div>
         <div class="guide-text">
-          • Лови пролетающего Дракона для +50% урона.<br>
-          • Жми «Замутить 🔇» в токсичном чате: тишина дает +50% к пассивному LP на 30 сек.
+          Доступен с «Дерева I». Сбрасывает ранг и LP, но даёт ценные 🔷 Осколки Мастери.
         </div>
       </div>
 
@@ -417,7 +426,6 @@
     </div>
   </div>
 
-  <!-- Окно Дейликов -->
   <div class="modal-overlay" id="dailyModal">
     <div class="modal-card">
       <h3 style="color: var(--accent);">📅 Награда за вход</h3>
@@ -427,17 +435,17 @@
     </div>
   </div>
 
-  <!-- Верхняя панель -->
   <div class="header">
     <div class="top-controls">
       <button class="btn-badge" id="soundToggle">🔊 ВКЛ</button>
-      <div class="rank-badge" id="rankDisplay">Ранг: Дерево IV</div>
+      <div class="rank-badge" id="rankDisplay" title="Нажми для просмотра всех рангов">Ранг: Дерево IV ℹ️</div>
       <button class="btn-badge" id="dailyBtn">🎁 Дейлик</button>
       <button class="btn-badge" id="helpBtn" style="color: var(--accent); font-weight: bold;">❓ Гайд</button>
     </div>
     
     <div class="combo-badge" id="comboBadge">x1 COMBO!</div>
     <div class="score-container"><span id="score">0</span> LP</div>
+    <div class="target-subtext" id="targetDisplay">Цель: 100 LP до промо</div>
     
     <div class="currencies-row">
       <div>🔷 Мастери: <span id="masteryDisplay" style="color: #00d2d3; font-weight: bold;">0</span></div>
@@ -447,7 +455,6 @@
     </div>
   </div>
 
-  <!-- Арена -->
   <div class="arena" id="arenaBox">
     <div class="character-btn" id="tapBtn">
       <div class="character-hat" id="charHat"></div>
@@ -456,7 +463,6 @@
     </div>
   </div>
 
-  <!-- Энергия -->
   <div class="bar-container" id="energyBox">
     <div class="bar-info">
       <span>⚡ Энергия</span>
@@ -465,7 +471,6 @@
     <div class="bar-bg"><div class="bar-fill" id="energyFill"></div></div>
   </div>
 
-  <!-- Босс-полоса -->
   <div class="bar-container" id="bossBox" style="display: none;">
     <div class="bar-info" style="color: var(--danger);">
       <span>⚔️ ПРОМО: <span id="bossTimer">20</span>с</span>
@@ -474,7 +479,6 @@
     <div class="bar-bg"><div class="bar-fill boss-fill" id="bossHpFill"></div></div>
   </div>
 
-  <!-- Навигация табов -->
   <div class="tabs-nav">
     <button class="tab-btn active" onclick="switchTab('shop')">🛒 Лавка</button>
     <button class="tab-btn" onclick="switchTab('runes')">🔮 Руны</button>
@@ -482,7 +486,6 @@
     <button class="tab-btn" onclick="switchTab('smurf')">🔷 Смурф</button>
   </div>
 
-  <!-- Таб: Лавка -->
   <div class="tab-content active" id="tab-shop">
     <div class="card-item clickable-card" id="cardBuyClick">
       <div>
@@ -500,7 +503,6 @@
     </div>
   </div>
 
-  <!-- Таб: Руны -->
   <div class="tab-content" id="tab-runes">
     <div class="card-item">
       <div>
@@ -525,7 +527,6 @@
     </div>
   </div>
 
-  <!-- Таб: Герои (смена за 2 🔷) -->
   <div class="tab-content" id="tab-heroes">
     <div class="card-item">
       <div>
@@ -550,7 +551,6 @@
     </div>
   </div>
 
-  <!-- Таб: Смурф -->
   <div class="tab-content" id="tab-smurf">
     <div class="card-item">
       <div>
@@ -561,7 +561,6 @@
     </div>
   </div>
 
-  <!-- Токсичный чат -->
   <div class="chat-bar">
     <div class="chat-msg" id="chatMsg"><b>Лесник:</b> Ясик, хватит фидить на миду!</div>
     <button class="mute-btn" id="muteBtn">Замутить 🔇</button>
@@ -605,10 +604,30 @@
       document.getElementById('soundToggle').textContent = soundEnabled ? "🔊 ВКЛ" : "🔇 ВЫКЛ";
     });
 
-    const RANKS = ["Дерево IV", "Дерево I", "Картон IV", "Картон I", "Медь", "Претендент Палаты"];
+    // ПРОГРЕССИЯ РАНГОВ: экспоненциальный рост нужного LP и HP боссов!
+    const RANKS_DATA = [
+      { name: "Дерево IV", icon: "🪵", reqLp: 100, bossHp: 120, reward: "Стартовый ранг. Доступ к базовой прокачке." },
+      { name: "Дерево III", icon: "🪵", reqLp: 200, bossHp: 260, reward: "<b>+1 Ключ 🗝️</b> + Закалка древесины." },
+      { name: "Дерево II", icon: "🪵", reqLp: 350, bossHp: 480, reward: "<b>+1 Ключ 🗝️</b> + Повышенный тонус." },
+      { name: "Дерево I", icon: "🌲", reqLp: 550, bossHp: 800, reward: "<b>+1 Ключ 🗝️</b> + Открытие <b>Смурфинга 🔄</b>!" },
+
+      { name: "Картон IV", icon: "📦", reqLp: 900, bossHp: 1400, reward: "<b>+1 Ключ 🗝️</b> + Картонная арена." },
+      { name: "Картон III", icon: "📦", reqLp: 1400, bossHp: 2200, reward: "<b>+1 Ключ 🗝️</b> + Плотный картон." },
+      { name: "Картон II", icon: "📦", reqLp: 2100, bossHp: 3400, reward: "<b>+1 Ключ 🗝️</b> + Разгон скорости." },
+      { name: "Картон I", icon: "📜", reqLp: 3200, bossHp: 5200, reward: "<b>+1 Ключ 🗝️</b> + Буст осколков при смурфе." },
+
+      { name: "Медь IV", icon: "🥉", reqLp: 5000, bossHp: 8500, reward: "<b>+1 Ключ 🗝️</b> + Индустриальный завод." },
+      { name: "Медь III", icon: "🥉", reqLp: 7500, bossHp: 13500, reward: "<b>+1 Ключ 🗝️</b> + Медная проводимость токовых рун." },
+      { name: "Медь II", icon: "🥉", reqLp: 11000, bossHp: 21000, reward: "<b>+1 Ключ 🗝️</b> + Закалка перед финалом." },
+      { name: "Медь I", icon: "🥉", reqLp: 16000, bossHp: 32000, reward: "<b>+1 Ключ 🗝️</b> + Порог Претендента." },
+
+      { name: "Претендент Палаты", icon: "👑", reqLp: 99999999, bossHp: 9999999, reward: "<b>+1 Ключ 🗝️</b> + Золотой дворец + Статус Легенды Клоунады!" }
+    ];
+
+    const RANKS = RANKS_DATA.map(r => r.name);
     const HERO_SHARD_COST = 2;
 
-    let state = JSON.parse(localStorage.getItem('clown_league_clean_v1')) || {
+    let state = JSON.parse(localStorage.getItem('clown_league_balanced_v2')) || {
       score: 0,
       clickPower: 1,
       passivePower: 0,
@@ -641,6 +660,7 @@
     const gameBody = document.getElementById('gameBody');
     const arenaBox = document.getElementById('arenaBox');
     const scoreEl = document.getElementById('score');
+    const targetDisplay = document.getElementById('targetDisplay');
     const rankEl = document.getElementById('rankDisplay');
     const masteryEl = document.getElementById('masteryDisplay');
     const keysEl = document.getElementById('keysDisplay');
@@ -673,7 +693,7 @@
     const btnHeroMalphite = document.getElementById('btnHeroMalphite');
 
     function saveGame() {
-      localStorage.setItem('clown_league_clean_v1', JSON.stringify(state));
+      localStorage.setItem('clown_league_balanced_v2', JSON.stringify(state));
     }
 
     function triggerShake() {
@@ -715,11 +735,11 @@
     }
 
     function updateRankAtmosphere() {
-      if (state.rankIndex <= 1) {
+      if (state.rankIndex <= 3) {
         arenaBox.style.setProperty('--arena-gradient', 'radial-gradient(circle, #1a251a 0%, #0b110b 100%)');
-      } else if (state.rankIndex <= 3) {
+      } else if (state.rankIndex <= 7) {
         arenaBox.style.setProperty('--arena-gradient', 'radial-gradient(circle, #2d241e 0%, #15100c 100%)');
-      } else if (state.rankIndex === 4) {
+      } else if (state.rankIndex <= 11) {
         arenaBox.style.setProperty('--arena-gradient', 'radial-gradient(circle, #361f18 0%, #180c08 100%)');
       } else {
         arenaBox.style.setProperty('--arena-gradient', 'radial-gradient(circle, #4a3810 0%, #1c1504 100%)');
@@ -757,14 +777,8 @@
     }
 
     function selectHero(hero) {
-      if (bossMode) {
-        alert("⛔ Нельзя менять чемпиона посреди битвы с боссом!");
-        return;
-      }
-      if (state.selectedHero === hero) {
-        alert("Этот чемпион уже выбран!");
-        return;
-      }
+      if (bossMode) { alert("⛔ Нельзя менять чемпиона посреди битвы с боссом!"); return; }
+      if (state.selectedHero === hero) { alert("Этот чемпион уже выбран!"); return; }
 
       if (state.masteryShards < HERO_SHARD_COST) {
         alert(`❌ Не хватает осколков! Нужно ${HERO_SHARD_COST} 🔷 Осколка Мастери (добываются в Смурфинге).`);
@@ -802,9 +816,16 @@
 
     function updateUI() {
       scoreEl.textContent = Math.floor(state.score);
-      rankEl.textContent = `Ранг: ${RANKS[state.rankIndex] || "Претендент"}`;
+      rankEl.innerHTML = `Ранг: ${RANKS[state.rankIndex] || "Претендент"} ℹ️`;
       masteryEl.textContent = state.masteryShards;
       keysEl.textContent = state.keys;
+
+      const currentReq = RANKS_DATA[state.rankIndex].reqLp;
+      if (state.rankIndex < RANKS.length - 1) {
+        targetDisplay.textContent = `Цель: ${Math.floor(state.score)} / ${currentReq} LP до промо`;
+      } else {
+        targetDisplay.textContent = `👑 Максимальный ранг достигнут!`;
+      }
 
       let effPassive = state.passivePower * (focusBuffActive ? 1.5 : 1);
       if (passiveDisplayEl) {
@@ -832,6 +853,40 @@
       updateHeroButtons();
       updateRankAtmosphere();
     }
+
+    function openRanksModal() {
+      const container = document.getElementById('ranksListContainer');
+      container.innerHTML = '';
+
+      RANKS_DATA.forEach((r, idx) => {
+        const card = document.createElement('div');
+        card.className = 'rank-card';
+
+        let badgeStatus = '';
+        if (idx < state.rankIndex) {
+          card.classList.add('passed');
+          badgeStatus = '<span style="color: #2ed573; font-size: 10px;">✓ Пройдено</span>';
+        } else if (idx === state.rankIndex) {
+          card.classList.add('current');
+          badgeStatus = '<span style="color: var(--accent); font-size: 10px;">⭐ Твой ранг</span>';
+        } else {
+          badgeStatus = `<span style="color: #747d8c; font-size: 10px;">🔒 ${r.reqLp} LP</span>`;
+        }
+
+        card.innerHTML = `
+          <div class="rank-card-header">
+            <span>${r.icon} ${r.name}</span>
+            ${badgeStatus}
+          </div>
+          <div class="rank-card-reward">${r.reward}</div>
+        `;
+        container.appendChild(card);
+      });
+
+      document.getElementById('ranksModal').style.display = 'flex';
+    }
+
+    rankEl.addEventListener('click', openRanksModal);
 
     tapBtn.addEventListener('pointerdown', (e) => {
       const now = Date.now();
@@ -887,13 +942,15 @@
         bossHpFill.style.width = `${Math.max(0, (bossCurrentHp / bossMaxHp) * 100)}%`;
         if (bossCurrentHp <= 0) endBossPromo(true);
       } else {
-        if (state.energy >= 1) {
+        // Каждый клик теперь требует 2 энергии
+        if (state.energy >= 2) {
           state.score += totalHit;
-          state.energy -= 1;
+          state.energy -= 2;
           Sound.tap();
           createFloatingText(spawnX, spawnY, `+${totalHit}`);
 
-          if (state.score >= 100 && state.rankIndex < RANKS.length - 1) {
+          const currentTarget = RANKS_DATA[state.rankIndex].reqLp;
+          if (state.score >= currentTarget && state.rankIndex < RANKS.length - 1) {
             startBossPromo();
           }
         }
@@ -905,7 +962,7 @@
 
     function startBossPromo() {
       bossMode = true;
-      bossMaxHp = 60 * (state.rankIndex + 1);
+      bossMaxHp = RANKS_DATA[state.rankIndex].bossHp;
       bossCurrentHp = bossMaxHp;
       bossTimeLeft = 20;
 
@@ -936,10 +993,11 @@
         state.keys += 1;
         Sound.win();
         triggerShake();
-        alert(`🏆 ПОБЕДА! Ты повысил ранг до: ${RANKS[state.rankIndex]}! Получен +1 Ключ!`);
+        alert(`🏆 ПОБЕДА! Ты повысил дивизион до: ${RANKS[state.rankIndex]}! Получен +1 Ключ!`);
       } else {
-        state.score = 70;
-        alert("💀 ТИЛЬТ! Промо слито, откат на 70 LP.");
+        const rollbackTarget = RANKS_DATA[state.rankIndex].reqLp;
+        state.score = Math.floor(rollbackTarget * 0.6);
+        alert(`💀 ТИЛЬТ! Время вышло, босс не побеждён! Откат до 60% LP.`);
       }
       saveGame();
       updateUI();
@@ -979,7 +1037,7 @@
 
     setInterval(() => {
       if (state.selectedHero === 'blitz' && !bossMode) {
-        let hookLp = 40 * (state.rankIndex + 1);
+        let hookLp = 25 * (state.rankIndex + 1);
         state.score += hookLp;
         createFloatingText(150, 100, `🎣 ХУК! +${hookLp} LP!`, "#2ed573");
         Sound.crit();
@@ -1068,11 +1126,12 @@
       updateUI();
     });
 
+    // Умная стоимость прокачки с ростом
     cardBuyClick.addEventListener('click', () => {
       if (state.score >= state.costClick) {
         state.score -= state.costClick;
         state.clickPower += 1;
-        state.costClick = Math.floor(state.costClick * 1.5);
+        state.costClick = Math.floor(state.costClick * 1.6);
         Sound.tap();
         saveGame();
         updateUI();
@@ -1083,7 +1142,7 @@
       if (state.score >= state.costPassive) {
         state.score -= state.costPassive;
         state.passivePower += 2;
-        state.costPassive = Math.floor(state.costPassive * 1.6);
+        state.costPassive = Math.floor(state.costPassive * 1.7);
         Sound.tap();
         saveGame();
         updateUI();
@@ -1091,10 +1150,14 @@
     });
 
     document.getElementById('prestigeBtn').addEventListener('click', () => {
-      let reward = Math.max(0, state.rankIndex * 2);
-      if (reward === 0) { alert("Нужен хотя бы ранг Дерево I для смурфинга!"); return; }
+      if (state.rankIndex < 3) {
+        alert("Нужен хотя бы ранг Дерево I для смурфинга!");
+        return;
+      }
 
-      if (confirm(`Купить смурф-аккаунт? Ранг и LP сбросятся, но ты получишь +${reward} 🔷 Осколков Мастери (их можно потратить на героев)!`)) {
+      let reward = Math.max(1, Math.floor(state.rankIndex * 1.5));
+
+      if (confirm(`Купить смурф-аккаунт? Ранг и LP сбросятся, но ты получишь +${reward} 🔷 Осколков Мастери!`)) {
         state.masteryShards += reward;
         state.score = 0;
         state.rankIndex = 0;
@@ -1115,7 +1178,8 @@
           state.energy = Math.min(state.maxEnergy, state.energy + 3);
         }
 
-        if (state.score >= 100 && state.rankIndex < RANKS.length - 1) {
+        const currentTarget = RANKS_DATA[state.rankIndex].reqLp;
+        if (state.score >= currentTarget && state.rankIndex < RANKS.length - 1) {
           startBossPromo();
         }
       }
