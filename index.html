@@ -427,7 +427,6 @@
     .modal-btn:active { transform: scale(0.97); box-shadow: 0 2px 8px rgba(245, 166, 35, 0.2); }
     .modal-btn:disabled { background: #222c3c; color: #576574; box-shadow: none; cursor: not-allowed; }
 
-    /* Переключение вкладок в модалке гайда */
     .guide-tabs {
       display: flex;
       gap: 4px;
@@ -606,107 +605,99 @@
     </div>
   </div>
 
-  <!-- Окно Помощи (Разделенное на 3 вкладки) -->
+  <!-- Окно Помощи (Гайд с 3 вкладками) -->
   <div class="modal-overlay" id="helpModal">
     <div class="modal-card">
       <button class="close-corner-btn" onclick="closeModal('helpModal')">✕</button>
       <div class="modal-header-icon">📖</div>
       <div class="modal-title">Руководство Игрока</div>
       
-      <!-- Переключатели вкладок гайда -->
       <div class="guide-tabs">
         <button class="guide-tab-btn active" onclick="switchGuideTab(0)">1. Основы</button>
         <button class="guide-tab-btn" onclick="switchGuideTab(1)">2. Валюты</button>
-        <button class="guide-tab-btn" onclick="switchGuideTab(2)">3. Донат (Stars)</button>
+        <button class="guide-tab-btn" onclick="switchGuideTab(2)">3. Донат</button>
       </div>
 
-      <!-- Вкладка 1: Старый гайд -->
+      <!-- Вкладка 1 -->
       <div class="guide-pane active" id="guidePane0">
         <div class="guide-section">
-          <div class="guide-title">⚡ Энергия и Реген</div>
+          <div class="guide-title">⚡ Медленная Энергия</div>
           <div class="guide-text">
-            Каждый клик тратит <b>2 энергии</b>. Базовый реген: <b>+1 энергия каждые 30 секунд</b>. Скорость можно улучшать в Лавке за Ключи.
+            Каждый клик тратит <b>2 энергии</b>. Регенерация замедлена: <b>+1 энергия каждые 30 секунд</b>. Берегите клики перед боссами или берите руну «Печенька»!
           </div>
         </div>
-
         <div class="guide-section">
           <div class="guide-title">🔮 Платные Руны и КД 5 минут</div>
           <div class="guide-text">
             Смена руны стоит LP и запускает кулдаун на <b>5 минут</b>. Выбирайте руну осознанно под свой стиль игры.
           </div>
         </div>
-
         <div class="guide-section">
           <div class="guide-title">🔄 Платный Смурфинг (Престиж)</div>
           <div class="guide-text">
-            Доступен с «Дерева I». Покупка смурф-аккаунта стоит <b>2 Ключа 🗝️</b>! Вы сбрасываете ранг и LP в обмен на Осколки Мастери.
+            Доступен с «Дерева I». Покупка смурф-аккаунта стоит <b>2 Ключа 🗝️</b> в обмен на Осколки Мастери.
           </div>
         </div>
-
         <div class="guide-section">
           <div class="guide-title">🦸 Персонажи и Гача (до 15 ур.)</div>
           <div class="guide-text">
-            • <b>Ясик 0/10:</b> комбо-кликер.<br>
-            • <b>Кот-Хукер:</b> авто-вор LP каждые 20с.<br>
-            • <b>Мальфит:</b> 1500 энергии, x3 по боссам.<br>
-            • <b>Грибовед Тимка:</b> яд-DOT урон.<br>
-            • <b>Дядя Дариус:</b> казнь босса при HP &lt; 15%.<br>
-            • <b>Лисичка Ари:</b> вампиризм энергии.<br>
-            * Гача за <b>4 🔷 Осколка</b> даёт случайного героя или +1 уровень!
+            • <b>Ясик 0/10:</b> быстрые комбо-серии.<br>
+            • <b>Кот-Хукер:</b> ворует LP каждые 20 сек.<br>
+            • <b>Мальфит:</b> 1500 энергии и x3 урон по боссам.<br>
+            • <b>Грибовед Тимка:</b> яд-DOT урон по боссу.<br>
+            • <b>Дядя Дариус:</b> казнит босса при HP &lt; 15%.<br>
+            • <b>Лисичка Ари:</b> вампиризм энергии (+10 каждые 10 тапов).<br>
+            * Сундук Гачи за <b>4 🔷 Осколка</b> даёт случайного героя или +1 уровень (макс. 15)!
           </div>
         </div>
       </div>
 
-      <!-- Вкладка 2: Валюты -->
+      <!-- Вкладка 2 -->
       <div class="guide-pane" id="guidePane1">
         <div class="guide-section">
           <div class="guide-title">🪙 LP (League Points)</div>
           <div class="guide-text">
-            <b>Для чего нужно:</b> Покупка улучшений в Лавке (Катана, Пассивка), смена боевых рун и продвижение по Дороге Рангов.<br>
-            <b>Как получить:</b> Активные клики по персонажу, пассивный доход («Песель на стеках»), пассивки Кот-Хукера и награды за ежедневный вход.
+            <b>Назначение:</b> Покупка улучшений в Лавке (Катана, Пассивка), смена боевых рун и продвижение по рангам.<br>
+            <b>Как получить:</b> Активные клики, пассивный доход («Песель на стеках»), способность Кот-Хукера и дейлики.
           </div>
         </div>
-
         <div class="guide-section">
           <div class="guide-title">🗝️ Ключи</div>
           <div class="guide-text">
-            <b>Для чего нужно:</b> Покупка смурф-аккаунта (престиж) и перманентное ускорение регенерации энергии в Лавке.<br>
-            <b>Как получить:</b> Победы над промо-боссами при повышении ранга, дейлики (День 2, 4, 6) или магазин Telegram Stars.
+            <b>Назначение:</b> Сброс ранга (Смурфинг) и перманентное ускорение восстановления энергии в Лавке.<br>
+            <b>Как получить:</b> Победы над промо-боссами при повышении дивизиона, дейлики или магазин Telegram Stars.
           </div>
         </div>
-
         <div class="guide-section">
           <div class="guide-title">🔷 Осколки Мастери</div>
           <div class="guide-text">
-            <b>Для чего нужно:</b> Открытие и трансфер новых чемпионов, прямая прокачка их уровней (до 15 ур.) или открытие сундуков в Хекстек-Гаче.<br>
-            <b>Как получить:</b> Покупка смурф-аккаунта (престиж сбрасывает ранг ради осколков), дейлики или магазин Stars.
+            <b>Назначение:</b> Разблокировка чемпионов, их прокачка до 15 уровня и открытие сундуков Гачи.<br>
+            <b>Как получить:</b> Смурфинг (сброс ранга приносит осколки), дейлики или покупка во вкладке «Донат».
           </div>
         </div>
-
         <div class="guide-section">
           <div class="guide-title">⚡ Энергия</div>
           <div class="guide-text">
-            <b>Для чего нужно:</b> Топливо для совершения кликов по врагам и боссам.<br>
-            <b>Как получить:</b> Медленно восстанавливается со временем, пополняется руной «Печенька» (+150 энергии) или пассивкой Ари.
+            <b>Назначение:</b> Основной ресурс для совершения кликов.<br>
+            <b>Как получить:</b> Регенерация со временем, руна «Печенька» (+150 энергии) или пассивка Лисички Ари.
           </div>
         </div>
       </div>
 
-      <!-- Вкладка 3: Донат -->
+      <!-- Вкладка 3 -->
       <div class="guide-pane" id="guidePane2">
         <div class="guide-section">
           <div class="guide-title">⭐️ Telegram Stars (Звёзды)</div>
           <div class="guide-text">
-            Официальная внутренняя валюта Telegram для безопасных платежей в один клик прямо внутри приложения.
+            Официальная цифровая валюта Telegram для безопасных и мгновенных микроплатежей внутри мини-приложений.
           </div>
         </div>
-
         <div class="guide-section">
-          <div class="guide-title">🛒 Что можно купить в разделе «Донат»:</div>
+          <div class="guide-title">🛒 Ассортимент вкладки «Донат»:</div>
           <div class="guide-text">
-            • <b>Наборы Ключей:</b> Для быстрого доступа к смурфингу и ускорителю энергии без фарма боссов.<br>
-            • <b>Осколки Мастери:</b> Для мгновенного открытия желанных персонажей и их прокачки до максимума.<br>
-            * Покупка открывает нативное окно Telegram, а ресурсы зачисляются автоматически сразу после успешной оплаты.
+            • <b>Наборы Ключей:</b> Мгновенное получение ключей для смурфингов и прокачки регенерации энергии.<br>
+            • <b>Осколки Мастери:</b> Ускоряют сбор героев и их прокачку до 15 уровня.<br>
+            * Клик на кнопку вызывает нативный системный инвойс Telegram Stars, после чего ресурсы автоматически поступают на ваш баланс.
           </div>
         </div>
       </div>
@@ -978,7 +969,6 @@
   </div>
 
   <script>
-    // Безопасная инициализация TG WebApp для локального запуска без сети/VPN
     let tg = null;
     try {
       if (window.Telegram && window.Telegram.WebApp) {
@@ -1058,7 +1048,7 @@
       ahri: { name: "Лисичка Ари", avatar: "🦊✨", cost: 5, baseEnergy: 700, rarity: "🟡 Легендарный (5%)", weight: 5 }
     };
 
-    let state = JSON.parse(localStorage.getItem('clown_league_upgrades_v6')) || {
+    let state = JSON.parse(localStorage.getItem('clown_league_upgrades_v8')) || {
       score: 0,
       clickPower: 1,
       passivePower: 0,
@@ -1142,7 +1132,7 @@
     const gachaMasteryBtn = document.getElementById('gachaMasteryBtn');
 
     function saveGame() {
-      localStorage.setItem('clown_league_upgrades_v6', JSON.stringify(state));
+      localStorage.setItem('clown_league_upgrades_v8', JSON.stringify(state));
     }
 
     function openModal(id) {
@@ -1157,7 +1147,6 @@
       setTimeout(() => { modal.style.display = 'none'; }, 250);
     }
 
-    // Переключение вкладок внутри модального окна гайда
     function switchGuideTab(index) {
       const panes = document.querySelectorAll('.guide-pane');
       const buttons = document.querySelectorAll('.guide-tab-btn');
@@ -1681,15 +1670,17 @@
 
     rankEl.addEventListener('click', openRanksModal);
 
+    // Настоящая интеграция Telegram Stars через генерацию инвойса на бэкенде
     function buyWithStars(type, amount, starsPrice) {
       if (!tg || !tg.openInvoice) {
-        alert(`⭐️ Оплата ${starsPrice} Stars доступна внутри Telegram!`);
+        alert(`⭐️ Оплата ${starsPrice} Stars возможна только внутри официального Telegram!`);
         return;
       }
 
-      const itemName = type === 'keys' ? 'Ключей 🗝️' : 'Осколков Мастери 🔷';
+      const itemName = type === 'keys' ? `${amount} Ключей 🗝️` : `${amount} Осколков Мастери 🔷`;
 
-      fetch(`/api/create-star-invoice?type=${type}&amount=${amount}&stars=${starsPrice}&userId=${tg.initDataUnsafe?.user?.id}`)
+      // Запрашиваем ссылку инвойса у бэкенда бота
+      fetch(`https://your-bot-backend.com/api/create-star-invoice?type=${type}&amount=${amount}&stars=${starsPrice}&userId=${tg.initDataUnsafe?.user?.id || 0}`)
         .then(res => res.json())
         .then(data => {
           if (data.invoiceLink) {
@@ -1704,19 +1695,19 @@
                 spawnConfettiExplosion();
                 saveGame();
                 updateUI();
-                alert(`🎉 Успешно! Получено +${amount} ${itemName}!`);
+                alert(`🎉 Успешно! Зачислено: ${itemName}!`);
               } else if (status === 'cancelled') {
-                alert("Оплата отменена.");
-              } else if (status === 'failed') {
-                alert("Ошибка проведения платежа Stars.");
+                alert("Оплата была отменена.");
+              } else {
+                alert("Не удалось завершить платёж.");
               }
             });
           } else {
-            alert("⚠️ Бэкенд платежей еще не подключен.");
+            alert("⚠️ Сервер не смог создать платежную ссылку. Проверьте настройки бэкенда.");
           }
         })
         .catch(err => {
-          alert(`⭐️ Запрос инвойса Stars (${starsPrice} ⭐️ за +${amount} ${itemName}). Подключите эндпоинт бота.`);
+          alert("⚠️ Ошибка подключения к серверу платежей Telegram Stars.");
         });
     }
 
