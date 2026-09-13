@@ -10,6 +10,7 @@
       --bg: #0b0f17;
       --card: #151d2a;
       --accent: #f5a623;
+      --gold-gradient: linear-gradient(135deg, #ffeaa7 0%, #f5a623 50%, #d35400 100%);
       --danger: #ff4757;
       --energy: #2ed573;
       --text: #ffffff;
@@ -187,6 +188,17 @@
       100% { transform: translate(var(--dx), var(--dy)) scale(0); opacity: 0; }
     }
 
+    .confetti {
+      position: fixed;
+      pointer-events: none;
+      z-index: 3000;
+      animation: confettiFall 1.8s ease-out forwards;
+    }
+    @keyframes confettiFall {
+      0% { transform: translate(0, 0) rotate(0deg) scale(1); opacity: 1; }
+      100% { transform: translate(var(--cx), var(--cy)) rotate(720deg) scale(0.2); opacity: 0; }
+    }
+
     .floating-text {
       position: absolute;
       font-weight: 800;
@@ -269,6 +281,8 @@
       font-weight: 700;
       font-size: 11px;
       cursor: pointer;
+      min-width: 75px;
+      text-align: center;
     }
     .card-item button:disabled { opacity: 0.4; cursor: not-allowed; border-color: #555; color: #777; }
 
@@ -309,35 +323,149 @@
     .modal-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.85);
+      background: rgba(7, 11, 18, 0.78);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
       display: none;
       align-items: center;
       justify-content: center;
       z-index: 2000;
       padding: 16px;
+      opacity: 0;
+      transition: opacity 0.25s ease;
     }
+    .modal-overlay.show { opacity: 1; }
+
     .modal-card {
-      background: var(--card);
-      border: 2px solid var(--accent);
-      border-radius: 14px;
-      padding: 16px;
+      background: linear-gradient(165deg, #192333 0%, #0d131d 100%);
+      border: 1px solid rgba(245, 166, 35, 0.4);
+      border-radius: 20px;
+      padding: 20px 16px 16px 16px;
       text-align: center;
-      max-width: 340px;
+      max-width: 350px;
       width: 100%;
-      max-height: 80vh;
+      max-height: 85vh;
       overflow-y: auto;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(245, 166, 35, 0.15);
+      position: relative;
+      transform: scale(0.85);
+      transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
+    .modal-overlay.show .modal-card { transform: scale(1); }
+
+    .modal-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 15%;
+      right: 15%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    }
+
+    .modal-header-icon {
+      font-size: 38px;
+      margin-bottom: 2px;
+      filter: drop-shadow(0 4px 10px rgba(245, 166, 35, 0.4));
+      animation: gentleFloat 2.5s ease-in-out infinite alternate;
+    }
+    @keyframes gentleFloat { from { transform: translateY(0); } to { transform: translateY(-5px); } }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: 800;
+      background: var(--gold-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: 0.3px;
+    }
+
+    .modal-subtitle {
+      font-size: 11px;
+      color: #8395a7;
+      margin-top: 3px;
+    }
+
     .modal-btn {
       width: 100%;
-      padding: 10px;
-      background: var(--accent);
+      padding: 12px;
+      background: var(--gold-gradient);
       border: none;
-      border-radius: 8px;
+      border-radius: 12px;
       font-weight: 800;
+      font-size: 13px;
       cursor: pointer;
-      color: #000;
-      margin-top: 8px;
+      color: #0b0f17;
+      margin-top: 12px;
+      box-shadow: 0 6px 18px rgba(245, 166, 35, 0.35);
+      transition: transform 0.1s, box-shadow 0.1s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
     }
+    .modal-btn:active { transform: scale(0.97); box-shadow: 0 2px 8px rgba(245, 166, 35, 0.2); }
+    .modal-btn:disabled { background: #222c3c; color: #576574; box-shadow: none; cursor: not-allowed; }
+
+    .daily-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin: 14px 0 6px 0;
+    }
+
+    .daily-day {
+      background: rgba(21, 29, 42, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      padding: 8px 3px;
+      font-size: 10px;
+      color: var(--subtext);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.15s, border-color 0.15s;
+    }
+    .daily-day .day-num { font-size: 9px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.4px; }
+    .daily-day .day-icon { font-size: 18px; margin: 2px 0; }
+    .daily-day .day-val { font-weight: 800; font-size: 10px; color: #c8d6e5; }
+    .daily-day.claimed { background: rgba(46, 213, 115, 0.08); border-color: rgba(46, 213, 115, 0.4); opacity: 0.7; }
+    .daily-day.claimed .day-val { color: var(--energy); }
+    .daily-day.claimed::after { content: '✓'; position: absolute; top: 3px; right: 4px; font-size: 10px; color: var(--energy); font-weight: 900; }
+    .daily-day.current {
+      background: linear-gradient(145deg, rgba(245, 166, 35, 0.22) 0%, rgba(20, 28, 42, 0.9) 100%);
+      border: 1.5px solid var(--accent);
+      box-shadow: 0 0 16px rgba(245, 166, 35, 0.35);
+      animation: goldPulse 1.6s infinite alternate ease-in-out;
+      transform: scale(1.03);
+    }
+    .daily-day.current .day-num { color: var(--accent); }
+    .daily-day.current .day-val { color: #fff; font-weight: 900; }
+    @keyframes goldPulse {
+      0% { box-shadow: 0 0 6px rgba(245, 166, 35, 0.25); border-color: rgba(245, 166, 35, 0.6); }
+      100% { box-shadow: 0 0 18px rgba(245, 166, 35, 0.6); border-color: #ffd32a; }
+    }
+    .daily-day.day-7 {
+      grid-column: span 2;
+      background: linear-gradient(135deg, rgba(245, 166, 35, 0.15) 0%, rgba(255, 71, 87, 0.15) 100%);
+    }
+
+    .close-corner-btn {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: transparent;
+      border: none;
+      color: #576574;
+      font-size: 18px;
+      cursor: pointer;
+      line-height: 1;
+      padding: 4px;
+    }
+    .close-corner-btn:hover { color: #fff; }
 
     .guide-section {
       text-align: left;
@@ -359,79 +487,80 @@
       flex-direction: column;
       gap: 3px;
     }
-    .rank-card.current {
-      border-color: var(--accent);
-      background: #1e2837;
-      box-shadow: 0 0 10px rgba(245, 166, 35, 0.2);
-    }
+    .rank-card.current { border-color: var(--accent); background: #1e2837; box-shadow: 0 0 10px rgba(245, 166, 35, 0.2); }
     .rank-card.passed { border-color: #2ed573; }
     .rank-card-header { display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: bold; }
     .rank-card-reward { font-size: 10px; color: #a4b0be; }
     .rank-card-reward b { color: var(--energy); }
-
-    .daily-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 10px 0; }
-    .daily-day { background: #0f1520; border: 1px solid #2f3542; border-radius: 6px; padding: 6px 2px; font-size: 10px; color: var(--subtext); }
-    .daily-day.claimed { border-color: var(--energy); color: var(--energy); }
-    .daily-day.current { border-color: var(--accent); background: #202b3c; color: #fff; }
   </style>
 </head>
 <body id="gameBody">
 
   <div class="modal-overlay" id="ranksModal">
     <div class="modal-card">
-      <h3 style="color: var(--accent);">🏆 Дорога Рангов</h3>
-      <p style="font-size: 11px; color: var(--subtext); margin-top: 2px;">Побеждай боссов и поднимайся в высшую лигу:</p>
+      <button class="close-corner-btn" onclick="closeModal('ranksModal')">✕</button>
+      <div class="modal-header-icon">🏆</div>
+      <div class="modal-title">Дорога Рангов</div>
+      <div class="modal-subtitle">Побеждай боссов и поднимайся в высшую лигу:</div>
       <div class="ranks-list" id="ranksListContainer"></div>
-      <button class="modal-btn" onclick="document.getElementById('ranksModal').style.display='none'">ЗАКРЫТЬ</button>
+      <button class="modal-btn" onclick="closeModal('ranksModal')">ЗАКРЫТЬ</button>
     </div>
   </div>
 
   <div class="modal-overlay" id="helpModal">
     <div class="modal-card">
-      <h3 style="color: var(--accent);">📖 Руководство Игрока</h3>
-      <p style="font-size: 11px; color: var(--subtext); margin-top: 2px;">Как не застрять на Дне Палаты:</p>
+      <button class="close-corner-btn" onclick="closeModal('helpModal')">✕</button>
+      <div class="modal-header-icon">📖</div>
+      <div class="modal-title">Руководство Игрока</div>
+      <div class="modal-subtitle">Как не застрять на Дне Палаты:</div>
 
       <div class="guide-section">
-        <div class="guide-title">⚡ LP и Энергия</div>
+        <div class="guide-title">⚡ Медленная Энергия</div>
         <div class="guide-text">
-          Каждый клик тратит <b>2 энергии</b>. Быстрые клики разгоняют комбо до x2.5! Если энергия на нуле — кликать нельзя, жди регена или печеньку.
+          Каждый клик тратит <b>2 энергии</b>. Регенерация замедлена: всего <b>+1 энергии/сек</b>. Берегите клики перед боссами или берите руну «Печенька»!
         </div>
       </div>
 
       <div class="guide-section">
-        <div class="guide-title">⚔️ Промо-боссы (Повышение ранга)</div>
+        <div class="guide-title">🔮 Платные Руны и КД 5 минут</div>
         <div class="guide-text">
-          Для каждого ранга нужен свой порог LP (он растёт!). У вас есть 20 секунд, чтобы снести боссу HP. <b>Качайте урон заранее!</b> Если босс не убит — откат очков.
+          Смена руны стоит LP и запускает кулдаун на <b>5 минут</b>. Выбирайте руну осознанно под свой текущий стиль игры.
+        </div>
+      </div>
+
+      <div class="guide-section">
+        <div class="guide-title">🔄 Платный Смурфинг (Престиж)</div>
+        <div class="guide-text">
+          Доступен с «Дерева I». Покупка смурф-аккаунта стоит <b>2 Ключа 🗝️</b>! Вы сбрасываете ранг и LP, взамен получая ценные <b>🔷 Осколки Мастери</b> для трансфера чемпионов.
         </div>
       </div>
 
       <div class="guide-section">
         <div class="guide-title">🦸 Чемпионы за 🔷 Осколки</div>
         <div class="guide-text">
-          Смена стоит <b>2 🔷 Осколка</b> (добываются через Смурфинг):<br>
-          • <b>Ясик:</b> быстрые комбо-серии.<br>
-          • <b>Кот-Хукер:</b> ворует LP каждые 20 сек.<br>
-          • <b>Мальфит:</b> 1500 энергии и <b>x3 урон по боссам</b> (идеален для сложных промо!).
+          • <b>Ясик 0/10:</b> классический комбо-кликер.<br>
+          • <b>Кот-Хукер:</b> ворует кучу LP каждые 20 сек.<br>
+          • <b>Мальфит:</b> 1500 энергии и x3 урон по промо-боссам.<br>
+          • <b>Грибовед Тимка:</b> отравляет босса и цель ядом.<br>
+          • <b>Дядя Дариус:</b> казнит босса, если его HP &lt; 15%.<br>
+          • <b>Лисичка Ари:</b> вампиризм энергии (+10 каждые 10 тапов).
         </div>
       </div>
 
-      <div class="guide-section">
-        <div class="guide-title">🔄 Смурфинг (Престиж)</div>
-        <div class="guide-text">
-          Доступен с «Дерева I». Сбрасывает ранг и LP, но даёт ценные 🔷 Осколки Мастери.
-        </div>
-      </div>
-
-      <button class="modal-btn" onclick="document.getElementById('helpModal').style.display='none'">ПОНЯТНО!</button>
+      <button class="modal-btn" onclick="closeModal('helpModal')">ПОНЯТНО!</button>
     </div>
   </div>
 
   <div class="modal-overlay" id="dailyModal">
     <div class="modal-card">
-      <h3 style="color: var(--accent);">📅 Награда за вход</h3>
-      <p style="font-size: 11px; color: var(--subtext); margin-top: 4px;">Заходи каждый день без пропусков:</p>
+      <button class="close-corner-btn" onclick="closeModal('dailyModal')">✕</button>
+      <div class="modal-header-icon">🎁</div>
+      <div class="modal-title">Награда за вход</div>
+      <div class="modal-subtitle">Заходи каждый день, чтобы забрать Корону Палаты!</div>
       <div class="daily-grid" id="dailyGrid"></div>
-      <button class="modal-btn" id="claimDailyBtn">ЗАБРАТЬ НАГРАДУ</button>
+      <button class="modal-btn" id="claimDailyBtn">
+        <span>✨</span> <span>ЗАБРАТЬ НАГРАДУ</span>
+      </button>
     </div>
   </div>
 
@@ -449,7 +578,7 @@
     
     <div class="currencies-row">
       <div>🔷 Мастери: <span id="masteryDisplay" style="color: #00d2d3; font-weight: bold;">0</span></div>
-      <div>🗝️ Ключи: <span id="keysDisplay">0</span></div>
+      <div>🗝️ Ключи: <span id="keysDisplay" style="color: #f5a623; font-weight: bold;">0</span></div>
       <div>⚡ Пассив: +<span id="passiveDisplay" style="color: var(--energy); font-weight: bold;">0</span>/с</div>
       <div>Руна: <b id="activeRuneDisplay" style="color: var(--accent);">Ток ⚡</b></div>
     </div>
@@ -465,7 +594,7 @@
 
   <div class="bar-container" id="energyBox">
     <div class="bar-info">
-      <span>⚡ Энергия</span>
+      <span>⚡ Энергия (+1/с)</span>
       <span><span id="energyText">500</span> / <span id="energyMaxText">500</span></span>
     </div>
     <div class="bar-bg"><div class="bar-fill" id="energyFill"></div></div>
@@ -509,21 +638,21 @@
         <div style="font-weight: 700; font-size: 12px;">⚡ Казнь током</div>
         <div style="font-size: 10px; color: var(--subtext);">Каждый 3-й быстрый тап бьет x3</div>
       </div>
-      <button id="runeElecBtn" onclick="selectRune('electrocute')">Выбрать</button>
+      <button id="runeElecBtn" onclick="selectRune('electrocute')">75 LP</button>
     </div>
     <div class="card-item">
       <div>
         <div style="font-weight: 700; font-size: 12px;">🍪 Печенька из кармана</div>
         <div style="font-size: 10px; color: var(--subtext);">+150 энергии раз в 60 сек</div>
       </div>
-      <button id="runeCookieBtn" onclick="selectRune('cookie')">Выбрать</button>
+      <button id="runeCookieBtn" onclick="selectRune('cookie')">75 LP</button>
     </div>
     <div class="card-item">
       <div>
         <div style="font-weight: 700; font-size: 12px;">💀 Темная Жатва</div>
         <div style="font-size: 10px; color: var(--subtext);">Урон x3 по боссу, если HP &lt; 35%</div>
       </div>
-      <button id="runeHarvestBtn" onclick="selectRune('harvest')">Выбрать</button>
+      <button id="runeHarvestBtn" onclick="selectRune('harvest')">75 LP</button>
     </div>
   </div>
 
@@ -531,23 +660,44 @@
     <div class="card-item">
       <div>
         <div style="font-weight: 700; font-size: 12px;">🌪️ Ясик 0/10</div>
-        <div style="font-size: 10px; color: var(--subtext);">Базовый тап, быстрое комбо</div>
+        <div style="font-size: 10px; color: var(--subtext);">Стартовый: быстрое комбо тапа</div>
       </div>
-      <button id="btnHeroYasuo" onclick="selectHero('yasuo')">2 🔷</button>
+      <button id="btnHero_yasuo" onclick="selectHero('yasuo')">2 🔷</button>
     </div>
     <div class="card-item">
       <div>
         <div style="font-weight: 700; font-size: 12px;">🐱 Кот-Хукер (Блиц)</div>
         <div style="font-size: 10px; color: var(--subtext);">Авто-хук: ворует LP каждые 20 сек</div>
       </div>
-      <button id="btnHeroBlitz" onclick="selectHero('blitz')">2 🔷</button>
+      <button id="btnHero_blitz" onclick="selectHero('blitz')">2 🔷</button>
     </div>
     <div class="card-item">
       <div>
         <div style="font-weight: 700; font-size: 12px;">🗿 Мальфит-Скала</div>
-        <div style="font-size: 10px; color: var(--subtext);">1500 энергии, x3 урон по боссам</div>
+        <div style="font-size: 10px; color: var(--subtext);">1500 энергии, x3 урон по промо-боссам</div>
       </div>
-      <button id="btnHeroMalphite" onclick="selectHero('malphite')">2 🔷</button>
+      <button id="btnHero_malphite" onclick="selectHero('malphite')">2 🔷</button>
+    </div>
+    <div class="card-item">
+      <div>
+        <div style="font-weight: 700; font-size: 12px;">🍄 Грибовед Тимка</div>
+        <div style="font-size: 10px; color: var(--subtext);">Отравляет тапом: +100% урона ядом на 3с</div>
+      </div>
+      <button id="btnHero_teemo" onclick="selectHero('teemo')">3 🔷</button>
+    </div>
+    <div class="card-item">
+      <div>
+        <div style="font-weight: 700; font-size: 12px;">🪓 Дядя Дариус</div>
+        <div style="font-size: 10px; color: var(--subtext);">+2 к тапу, казнит босса при HP &lt; 15%</div>
+      </div>
+      <button id="btnHero_darius" onclick="selectHero('darius')">4 🔷</button>
+    </div>
+    <div class="card-item">
+      <div>
+        <div style="font-weight: 700; font-size: 12px;">🦊 Лисичка Ари</div>
+        <div style="font-size: 10px; color: var(--subtext);">700 энергии, вампирит +10 энергии каждые 10 тапов</div>
+      </div>
+      <button id="btnHero_ahri" onclick="selectHero('ahri')">5 🔷</button>
     </div>
   </div>
 
@@ -555,9 +705,9 @@
     <div class="card-item">
       <div>
         <div style="font-weight: 700; font-size: 12px;">🔄 Купить Смурф-акк</div>
-        <div style="font-size: 10px; color: var(--subtext);">Сброс ранга и LP в обмен на Осколки Мастери</div>
+        <div style="font-size: 10px; color: var(--subtext);" id="smurfDesc">Сброс ранга и LP в обмен на Осколки Мастери</div>
       </div>
-      <button id="prestigeBtn">Смурфить</button>
+      <button id="prestigeBtn">2 🗝️</button>
     </div>
   </div>
 
@@ -596,7 +746,8 @@
       tap: () => playTone(360, 'sine', 0.05, 0.08),
       crit: () => { playTone(540, 'triangle', 0.08, 0.15); setTimeout(() => playTone(900, 'triangle', 0.12, 0.2), 40); },
       win: () => { [440, 554, 659, 880].forEach((f, i) => setTimeout(() => playTone(f, 'square', 0.15, 0.1), i * 100)); },
-      mute: () => playTone(200, 'sine', 0.2, 0.15)
+      mute: () => playTone(200, 'sine', 0.2, 0.15),
+      claim: () => { [523, 659, 784, 1046].forEach((f, i) => setTimeout(() => playTone(f, 'triangle', 0.18, 0.15), i * 90)); }
     };
 
     document.getElementById('soundToggle').addEventListener('click', () => {
@@ -604,7 +755,6 @@
       document.getElementById('soundToggle').textContent = soundEnabled ? "🔊 ВКЛ" : "🔇 ВЫКЛ";
     });
 
-    // ПРОГРЕССИЯ РАНГОВ: экспоненциальный рост нужного LP и HP боссов!
     const RANKS_DATA = [
       { name: "Дерево IV", icon: "🪵", reqLp: 100, bossHp: 120, reward: "Стартовый ранг. Доступ к базовой прокачке." },
       { name: "Дерево III", icon: "🪵", reqLp: 200, bossHp: 260, reward: "<b>+1 Ключ 🗝️</b> + Закалка древесины." },
@@ -625,9 +775,20 @@
     ];
 
     const RANKS = RANKS_DATA.map(r => r.name);
-    const HERO_SHARD_COST = 2;
+    const RUNE_COOLDOWN_SEC = 300;
+    const SMURF_KEY_COST = 2;
 
-    let state = JSON.parse(localStorage.getItem('clown_league_balanced_v2')) || {
+    // Конфиг чемпионов
+    const HEROES_CONFIG = {
+      yasuo: { name: "Ясик 0/10", avatar: "🌪️🤡", cost: 2, maxEnergy: 500 },
+      blitz: { name: "Кот-Хукер", avatar: "🐱🤖", cost: 2, maxEnergy: 500 },
+      malphite: { name: "Мальфит-Скала", avatar: "🗿🪨", cost: 2, maxEnergy: 1500 },
+      teemo: { name: "Грибовед Тимка", avatar: "🍄😈", cost: 3, maxEnergy: 400 },
+      darius: { name: "Дядя Дариус", avatar: "🪓🩸", cost: 4, maxEnergy: 600 },
+      ahri: { name: "Лисичка Ари", avatar: "🦊✨", cost: 5, maxEnergy: 700 }
+    };
+
+    let state = JSON.parse(localStorage.getItem('clown_league_heroes_v1')) || {
       score: 0,
       clickPower: 1,
       passivePower: 0,
@@ -640,6 +801,7 @@
       keys: 1,
       selectedHero: "yasuo",
       selectedRune: "electrocute",
+      lastRuneChangeTime: 0,
       dailyStreak: 0,
       lastDailyDate: ""
     };
@@ -648,6 +810,8 @@
     let comboMultiplier = 1;
     let lastTapTime = 0;
     let rapidTapsCount = 0;
+    let totalHeroTaps = 0;
+    let poisonActive = 0; // счетчик яда Тимо
     let focusBuffActive = false;
     let dragonBuffActive = false;
 
@@ -688,12 +852,27 @@
     const buyClickBtn = document.getElementById('buyClickBtn');
     const buyPassiveBtn = document.getElementById('buyPassiveBtn');
 
-    const btnHeroYasuo = document.getElementById('btnHeroYasuo');
-    const btnHeroBlitz = document.getElementById('btnHeroBlitz');
-    const btnHeroMalphite = document.getElementById('btnHeroMalphite');
+    const runeElecBtn = document.getElementById('runeElecBtn');
+    const runeCookieBtn = document.getElementById('runeCookieBtn');
+    const runeHarvestBtn = document.getElementById('runeHarvestBtn');
+
+    const prestigeBtn = document.getElementById('prestigeBtn');
+    const smurfDesc = document.getElementById('smurfDesc');
 
     function saveGame() {
-      localStorage.setItem('clown_league_balanced_v2', JSON.stringify(state));
+      localStorage.setItem('clown_league_heroes_v1', JSON.stringify(state));
+    }
+
+    function openModal(id) {
+      const modal = document.getElementById(id);
+      modal.style.display = 'flex';
+      requestAnimationFrame(() => modal.classList.add('show'));
+    }
+
+    function closeModal(id) {
+      const modal = document.getElementById(id);
+      modal.classList.remove('show');
+      setTimeout(() => { modal.style.display = 'none'; }, 250);
     }
 
     function triggerShake() {
@@ -720,6 +899,31 @@
 
         document.body.appendChild(p);
         setTimeout(() => p.remove(), 600);
+      }
+    }
+
+    function spawnConfettiExplosion() {
+      const colors = ['#f5a623', '#2ed573', '#ff4757', '#00d2d3', '#ffffff', '#ffd32a'];
+      const cx = window.innerWidth / 2;
+      const cy = window.innerHeight / 2;
+
+      for (let i = 0; i < 40; i++) {
+        const c = document.createElement('div');
+        c.className = 'confetti';
+        const size = Math.random() * 8 + 5;
+        c.style.width = `${size}px`;
+        c.style.height = `${size * 0.6}px`;
+        c.style.background = colors[Math.floor(Math.random() * colors.length)];
+        c.style.left = `${cx}px`;
+        c.style.top = `${cy}px`;
+
+        const angle = Math.random() * Math.PI * 2;
+        const dist = Math.random() * 180 + 50;
+        c.style.setProperty('--cx', `${Math.cos(angle) * dist}px`);
+        c.style.setProperty('--cy', `${Math.sin(angle) * dist + 100}px`);
+
+        document.body.appendChild(c);
+        setTimeout(() => c.remove(), 1800);
       }
     }
 
@@ -753,65 +957,127 @@
       document.getElementById(`tab-${tabId}`).classList.add('active');
     }
 
+    function getRuneSwitchCost() {
+      return 75 * (state.rankIndex + 1);
+    }
+
     function selectRune(rune) {
-      state.selectedRune = rune;
-      saveGame();
-      updateUI();
-      alert(`Выбрана руна: ${runeDisplayEl.textContent}!`);
-    }
+      if (bossMode) { alert("⛔ Нельзя менять руну во время битвы с боссом!"); return; }
+      if (state.selectedRune === rune) { alert("Эта руна уже активна!"); return; }
 
-    function applyHeroStats(hero) {
-      if (hero === 'yasuo') {
-        avatarEl.textContent = "🌪️🤡";
-        charNameEl.textContent = "Ясик 0/10";
-        state.maxEnergy = 500;
-      } else if (hero === 'blitz') {
-        avatarEl.textContent = "🐱🤖";
-        charNameEl.textContent = "Кот-Хукер";
-        state.maxEnergy = 500;
-      } else if (hero === 'malphite') {
-        avatarEl.textContent = "🗿🪨";
-        charNameEl.textContent = "Мальфит-Скала";
-        state.maxEnergy = 1500;
-      }
-    }
-
-    function selectHero(hero) {
-      if (bossMode) { alert("⛔ Нельзя менять чемпиона посреди битвы с боссом!"); return; }
-      if (state.selectedHero === hero) { alert("Этот чемпион уже выбран!"); return; }
-
-      if (state.masteryShards < HERO_SHARD_COST) {
-        alert(`❌ Не хватает осколков! Нужно ${HERO_SHARD_COST} 🔷 Осколка Мастери (добываются в Смурфинге).`);
+      const now = Date.now();
+      const secondsLeft = Math.ceil((state.lastRuneChangeTime + RUNE_COOLDOWN_SEC * 1000 - now) / 1000);
+      if (secondsLeft > 0) {
+        const mins = Math.floor(secondsLeft / 60);
+        const secs = secondsLeft % 60;
+        alert(`⏳ Смена руны на перезарядке! Подожди еще ${mins}м ${secs < 10 ? '0' : ''}${secs}с.`);
         return;
       }
 
-      state.masteryShards -= HERO_SHARD_COST;
-      state.selectedHero = hero;
+      const cost = getRuneSwitchCost();
+      if (state.score < cost) {
+        alert(`❌ Недостаточно LP! Для смены руны требуется ${cost} LP.`);
+        return;
+      }
+
+      state.score -= cost;
+      state.selectedRune = rune;
+      state.lastRuneChangeTime = now;
+
+      saveGame();
+      Sound.crit();
+      updateUI();
+      alert(`🔮 Руна изменена за ${cost} LP! Откат 5 минут запущен.`);
+    }
+
+    function updateRuneButtons() {
+      const now = Date.now();
+      const secondsLeft = Math.ceil((state.lastRuneChangeTime + RUNE_COOLDOWN_SEC * 1000 - now) / 1000);
+      const isCooldown = secondsLeft > 0;
+      const cost = getRuneSwitchCost();
+
+      const runes = [
+        { id: 'electrocute', btn: runeElecBtn },
+        { id: 'cookie', btn: runeCookieBtn },
+        { id: 'harvest', btn: runeHarvestBtn }
+      ];
+
+      runes.forEach(r => {
+        if (state.selectedRune === r.id) {
+          r.btn.textContent = "Выбрана ✓";
+          r.btn.disabled = true;
+        } else if (isCooldown) {
+          const mins = Math.floor(secondsLeft / 60);
+          const secs = secondsLeft % 60;
+          r.btn.textContent = `КД: ${mins}:${secs < 10 ? '0' : ''}${secs}`;
+          r.btn.disabled = true;
+        } else {
+          r.btn.textContent = `${cost} LP`;
+          r.btn.disabled = state.score < cost;
+        }
+      });
+    }
+
+    function applyHeroStats(heroKey) {
+      const cfg = HEROES_CONFIG[heroKey] || HEROES_CONFIG.yasuo;
+      avatarEl.textContent = cfg.avatar;
+      charNameEl.textContent = cfg.name;
+      state.maxEnergy = cfg.maxEnergy;
+    }
+
+    function selectHero(heroKey) {
+      if (bossMode) { alert("⛔ Нельзя менять чемпиона посреди битвы с боссом!"); return; }
+      if (state.selectedHero === heroKey) { alert("Этот чемпион уже выбран!"); return; }
+
+      const cfg = HEROES_CONFIG[heroKey];
+      if (!cfg) return;
+
+      if (state.masteryShards < cfg.cost) {
+        alert(`❌ Не хватает осколков! Нужно ${cfg.cost} 🔷 Осколков Мастери (добываются в Смурфинге).`);
+        return;
+      }
+
+      state.masteryShards -= cfg.cost;
+      state.selectedHero = heroKey;
       state.energy = 0;
 
-      applyHeroStats(hero);
+      applyHeroStats(heroKey);
       saveGame();
       Sound.win();
       updateUI();
-      alert(`💎 Трансфер оформлен! Списано ${HERO_SHARD_COST} 🔷. Выбран: ${charNameEl.textContent}.`);
+      alert(`💎 Трансфер оформлен! Списано ${cfg.cost} 🔷. Выбран: ${charNameEl.textContent}.`);
     }
 
     function updateHeroButtons() {
-      const heroes = [
-        { id: 'yasuo', btn: btnHeroYasuo },
-        { id: 'blitz', btn: btnHeroBlitz },
-        { id: 'malphite', btn: btnHeroMalphite }
-      ];
+      Object.keys(HEROES_CONFIG).forEach(key => {
+        const btn = document.getElementById(`btnHero_${key}`);
+        if (!btn) return;
+        const cfg = HEROES_CONFIG[key];
 
-      heroes.forEach(h => {
-        if (state.selectedHero === h.id) {
-          h.btn.textContent = "Выбран ✓";
-          h.btn.disabled = true;
+        if (state.selectedHero === key) {
+          btn.textContent = "Выбран ✓";
+          btn.disabled = true;
         } else {
-          h.btn.textContent = `${HERO_SHARD_COST} 🔷`;
-          h.btn.disabled = state.masteryShards < HERO_SHARD_COST;
+          btn.textContent = `${cfg.cost} 🔷`;
+          btn.disabled = state.masteryShards < cfg.cost;
         }
       });
+    }
+
+    function updateSmurfStatus() {
+      const reward = Math.max(1, Math.floor(state.rankIndex * 1.5));
+      const canRank = state.rankIndex >= 3;
+      const canKeys = state.keys >= SMURF_KEY_COST;
+
+      if (!canRank) {
+        smurfDesc.textContent = `Доступно с Дерева I (награда: +${reward} 🔷)`;
+        prestigeBtn.disabled = true;
+        prestigeBtn.textContent = `${SMURF_KEY_COST} 🗝️ (Ранг 🔒)`;
+      } else {
+        smurfDesc.textContent = `Сброс ранга и LP в обмен на +${reward} 🔷 Осколков`;
+        prestigeBtn.disabled = !canKeys;
+        prestigeBtn.textContent = `${SMURF_KEY_COST} 🗝️`;
+      }
     }
 
     function updateUI() {
@@ -836,9 +1102,8 @@
       else if (state.selectedRune === 'cookie') runeDisplayEl.textContent = "Печенье 🍪";
       else runeDisplayEl.textContent = "Жатва 💀";
 
-      document.getElementById('runeElecBtn').disabled = state.selectedRune === 'electrocute';
-      document.getElementById('runeCookieBtn').disabled = state.selectedRune === 'cookie';
-      document.getElementById('runeHarvestBtn').disabled = state.selectedRune === 'harvest';
+      updateRuneButtons();
+      updateSmurfStatus();
 
       energyTextEl.textContent = Math.floor(state.energy);
       energyMaxTextEl.textContent = state.maxEnergy;
@@ -883,7 +1148,7 @@
         container.appendChild(card);
       });
 
-      document.getElementById('ranksModal').style.display = 'flex';
+      openModal('ranksModal');
     }
 
     rankEl.addEventListener('click', openRanksModal);
@@ -905,6 +1170,7 @@
         comboMultiplier = 1;
       }
       lastTapTime = now;
+      totalHeroTaps++;
 
       if (comboMultiplier > 1) {
         comboBadge.textContent = `x${comboMultiplier} COMBO!`;
@@ -912,6 +1178,15 @@
       } else {
         comboBadge.classList.remove('active');
       }
+
+      // Пассивка Ари: восстанавливает +10 энергии каждые 10 тапов
+      if (state.selectedHero === 'ahri' && totalHeroTaps % 10 === 0) {
+        state.energy = Math.min(state.maxEnergy, state.energy + 10);
+        createFloatingText(spawnX, spawnY - 35, "+10 ⚡ Вампиризм!", "#00d2d3");
+      }
+
+      // Пассивка Дариуса: +2 к базовому урону
+      let dariusBonus = (state.selectedHero === 'darius') ? 2 : 0;
 
       let runeMultiplier = 1;
       if (state.selectedRune === 'electrocute' && rapidTapsCount >= 3) {
@@ -929,12 +1204,26 @@
 
       let heroBossMult = (bossMode && state.selectedHero === 'malphite') ? 3 : 1;
       let dragonMult = dragonBuffActive ? 1.5 : 1;
-      let totalHit = Math.floor(state.clickPower * comboMultiplier * runeMultiplier * heroBossMult * dragonMult);
+      let totalHit = Math.floor((state.clickPower + dariusBonus) * comboMultiplier * runeMultiplier * heroBossMult * dragonMult);
 
       spawnParticles(spawnX, spawnY);
 
       if (bossMode) {
         bossCurrentHp -= totalHit;
+
+        // Пассивка Тимо: накладывает яд на 3 секунды
+        if (state.selectedHero === 'teemo') {
+          poisonActive = 3;
+        }
+
+        // Казнь Дариуса: мгновенное добивание, если у босса < 15% HP
+        if (state.selectedHero === 'darius' && (bossCurrentHp / bossMaxHp) < 0.15 && bossCurrentHp > 0) {
+          bossCurrentHp = 0;
+          triggerShake();
+          Sound.crit();
+          createFloatingText(spawnX, spawnY - 25, "🪓 ГИЛЬОТИНА! КАЗНЬ!", "#ff4757");
+        }
+
         Sound.crit();
         triggerShake();
         createFloatingText(spawnX, spawnY, `-${totalHit} HP`, 'var(--danger)');
@@ -942,7 +1231,6 @@
         bossHpFill.style.width = `${Math.max(0, (bossCurrentHp / bossMaxHp) * 100)}%`;
         if (bossCurrentHp <= 0) endBossPromo(true);
       } else {
-        // Каждый клик теперь требует 2 энергии
         if (state.energy >= 2) {
           state.score += totalHit;
           state.energy -= 2;
@@ -965,6 +1253,7 @@
       bossMaxHp = RANKS_DATA[state.rankIndex].bossHp;
       bossCurrentHp = bossMaxHp;
       bossTimeLeft = 20;
+      poisonActive = 0;
 
       avatarEl.textContent = "🦀👾";
       charNameEl.textContent = "ПРОМО-БОСС";
@@ -975,6 +1264,18 @@
       bossInterval = setInterval(() => {
         bossTimeLeft--;
         bossTimerEl.textContent = bossTimeLeft;
+
+        // Тик яда Тимо
+        if (poisonActive > 0 && bossCurrentHp > 0) {
+          let poisonDmg = Math.max(2, Math.floor(state.clickPower * 1.5));
+          bossCurrentHp -= poisonDmg;
+          poisonActive--;
+          createFloatingText(180, 80, `🍄 -${poisonDmg} Яд`, "#2ed573");
+          bossHpEl.textContent = Math.max(0, bossCurrentHp);
+          bossHpFill.style.width = `${Math.max(0, (bossCurrentHp / bossMaxHp) * 100)}%`;
+          if (bossCurrentHp <= 0) endBossPromo(true);
+        }
+
         if (bossTimeLeft <= 0) endBossPromo(false);
       }, 1000);
     }
@@ -993,7 +1294,7 @@
         state.keys += 1;
         Sound.win();
         triggerShake();
-        alert(`🏆 ПОБЕДА! Ты повысил дивизион до: ${RANKS[state.rankIndex]}! Получен +1 Ключ!`);
+        alert(`🏆 ПОБЕДА! Ты повысил дивизион до: ${RANKS[state.rankIndex]}! Получен +1 Ключ 🗝️!`);
       } else {
         const rollbackTarget = RANKS_DATA[state.rankIndex].reqLp;
         state.score = Math.floor(rollbackTarget * 0.6);
@@ -1070,7 +1371,13 @@
     });
 
     const DAILY_REWARDS = [
-      "+150 LP", "+1 Ключ 🗝️", "+300 LP", "+2 Ключа 🗝️", "+500 LP", "+3 Ключа 🗝️", "👑 Корона"
+      { text: "+150 LP", icon: "🪙" },
+      { text: "+1 Ключ", icon: "🗝️" },
+      { text: "+300 LP", icon: "🪙" },
+      { text: "+2 Ключа", icon: "🗝️" },
+      { text: "+500 LP", icon: "🪙" },
+      { text: "+3 Ключа", icon: "🗝️" },
+      { text: "КОРОНА", icon: "👑" }
     ];
 
     function checkDailyStatus() {
@@ -1081,24 +1388,31 @@
       DAILY_REWARDS.forEach((rew, idx) => {
         const box = document.createElement('div');
         box.className = 'daily-day';
+        if (idx === 6) box.classList.add('day-7');
         if (idx < state.dailyStreak) box.classList.add('claimed');
         if (idx === state.dailyStreak) box.classList.add('current');
-        box.innerHTML = `<div>День ${idx + 1}</div><b style="font-size:9px;">${rew}</b>`;
+
+        box.innerHTML = `
+          <div class="day-num">День ${idx + 1}</div>
+          <div class="day-icon">${rew.icon}</div>
+          <div class="day-val">${rew.text}</div>
+        `;
         grid.appendChild(box);
       });
 
       const canClaim = state.lastDailyDate !== today;
-      document.getElementById('claimDailyBtn').disabled = !canClaim;
-      document.getElementById('claimDailyBtn').textContent = canClaim ? "ЗАБРАТЬ НАГРАДУ" : "УЖЕ ЗАБРАНО СЕГОДНЯ ✓";
+      const btn = document.getElementById('claimDailyBtn');
+      btn.disabled = !canClaim;
+      btn.innerHTML = canClaim ? "<span>✨</span> <span>ЗАБРАТЬ НАГРАДУ</span>" : "<span>✓</span> <span>УЖЕ ЗАБРАНО СЕГОДНЯ</span>";
     }
 
     document.getElementById('dailyBtn').addEventListener('click', () => {
       checkDailyStatus();
-      document.getElementById('dailyModal').style.display = 'flex';
+      openModal('dailyModal');
     });
 
     document.getElementById('helpBtn').addEventListener('click', () => {
-      document.getElementById('helpModal').style.display = 'flex';
+      openModal('helpModal');
     });
 
     document.getElementById('claimDailyBtn').addEventListener('click', () => {
@@ -1114,19 +1428,26 @@
       else if (state.dailyStreak === 5) state.keys += 3;
       else if (state.dailyStreak === 6) {
         charHatEl.textContent = "👑";
-        alert("👑 ТЫ ПОЛУЧИЛ ЗОЛОТУЮ КОРОНУ ПРЕЗИДЕНТА ПАЛАТЫ!");
       }
 
       state.lastDailyDate = today;
       state.dailyStreak = (state.dailyStreak + 1) % 7;
       saveGame();
-      Sound.win();
-      alert(`Награда за день получена: ${rew}!`);
-      document.getElementById('dailyModal').style.display = 'none';
+
+      Sound.claim();
+      spawnConfettiExplosion();
+      triggerShake();
+
+      document.getElementById('claimDailyBtn').disabled = true;
+      document.getElementById('claimDailyBtn').innerHTML = "<span>✓</span> <span>ПОЛУЧЕНО!</span>";
+      checkDailyStatus();
       updateUI();
+
+      setTimeout(() => {
+        closeModal('dailyModal');
+      }, 1200);
     });
 
-    // Умная стоимость прокачки с ростом
     cardBuyClick.addEventListener('click', () => {
       if (state.score >= state.costClick) {
         state.score -= state.costClick;
@@ -1149,23 +1470,30 @@
       }
     });
 
-    document.getElementById('prestigeBtn').addEventListener('click', () => {
+    prestigeBtn.addEventListener('click', () => {
       if (state.rankIndex < 3) {
         alert("Нужен хотя бы ранг Дерево I для смурфинга!");
+        return;
+      }
+      if (state.keys < SMURF_KEY_COST) {
+        alert(`❌ Не хватает ключей! Покупка смурф-аккаунта стоит ${SMURF_KEY_COST} 🗝️ (побеждай боссов или забирай дейлики).`);
         return;
       }
 
       let reward = Math.max(1, Math.floor(state.rankIndex * 1.5));
 
-      if (confirm(`Купить смурф-аккаунт? Ранг и LP сбросятся, но ты получишь +${reward} 🔷 Осколков Мастери!`)) {
+      if (confirm(`Купить смурф-аккаунт за ${SMURF_KEY_COST} 🗝️ Ключа? Ранг и LP сбросятся в ноль, но ты получишь +${reward} 🔷 Осколков Мастери!`)) {
+        state.keys -= SMURF_KEY_COST;
         state.masteryShards += reward;
         state.score = 0;
         state.rankIndex = 0;
         state.clickPower = 1;
         state.costClick = 15;
-        Sound.win();
+        Sound.claim();
+        spawnConfettiExplosion();
         saveGame();
         updateUI();
+        alert(`🎉 Смурф-аккаунт куплен! Списано ${SMURF_KEY_COST} 🗝️. Получено +${reward} 🔷 Осколков Мастери!`);
       }
     });
 
@@ -1175,7 +1503,7 @@
         if (effPassive > 0) state.score += effPassive;
 
         if (state.energy < state.maxEnergy) {
-          state.energy = Math.min(state.maxEnergy, state.energy + 3);
+          state.energy = Math.min(state.maxEnergy, state.energy + 1);
         }
 
         const currentTarget = RANKS_DATA[state.rankIndex].reqLp;
