@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Лига Клоунов: Offline Master Edition</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    :root {
+      --bg: #0b0f17;
+      --card: #151d2a;
+      --accent: #f5a623;
+      --danger: #ff4757;
+      --energy: #2ed573;
+      --text: #ffffff;
+      --subtext: #747d8c;
+      --combo: #ff6b81;
+      --chat-bg: #1e272e;
+      --arena-gradient: radial-gradient(circle, #1a2536 0%, #0b0f17 100%);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 10px;
+      overflow-x: hidden;
+      padding-bottom: 70px;
+      transition: background 0.8s ease;
+    }
+
+    /* Анимация тряски экрана */
+    .shake {
+      animation: screenShake 0.15s cubic-bezier(.36,.07,.19,.97) both;
+    }
+    @keyframes screenShake {
+      10%, 90% { transform: translate3d(-2px, 1px, 0); }
+      20%, 80% { transform: translate3d(3px, -2px, 0); }
+      30%, 50%, 70% { transform: translate3d(-3px, 2px, 0); }
+      40%, 60% { transform: translate3d(3px, 1px, 0); }
+    }
+
+    /* Верхняя панель */
+    .header {
+      text-align: center;
+      width: 100%;
+      max-width: 420px;
+      position: relative;
+    }
+
+    .top-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+
+    .btn-badge {
+      background: var(--card);
+      border: 1px solid #2f3542;
+      color: var(--text);
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    .rank-badge {
+      background: var(--card);
+      border: 1px solid #2f3542;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .score-container {
+      font-size: 34px;
+      font-weight: 800;
+      margin-top: 2px;
+    }
+
+    .currencies-row {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      font-size: 11px;
+      color: var(--subtext);
+      margin-top: 2px;
+    }
+
+    .combo-badge {
+      position: absolute;
+      right: 0;
+      top: 26px;
+      background: var(--combo);
+      color: #fff;
+      font-weight: 900;
+      padding: 2px 8px;
+      border-radius: 8px;
+      transform: scale(0);
+      transition: transform 0.2s;
+    }
+    .combo-badge.active { transform: scale(1); }
+
+    /* Центральная Арена */
+    .arena {
+      position: relative;
+      margin: 8px 0;
+      width: 100%;
+      max-width: 420px;
+      height: 200px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: var(--arena-gradient);
+      border-radius: 16px;
+      border: 1px solid #1f2937;
+      overflow: hidden;
+      transition: background 0.8s ease;
+    }
+
+    .character-btn {
+      background: radial-gradient(circle, #202b3c 0%, #101622 100%);
+      border: 4px solid #2f3542;
+      border-radius: 50%;
+      width: 165px;
+      height: 165px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.6);
+      transition: transform 0.05s ease;
+      position: relative;
+      z-index: 2;
+    }
+    .character-btn:active { transform: scale(0.92); border-color: var(--accent); }
+    .character-btn.boss-mode {
+      border-color: var(--danger);
+      background: radial-gradient(circle, #421419 0%, #170709 100%);
+      animation: pulse 0.8s infinite alternate;
+    }
+    @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.05); } }
+
+    .character-hat { position: absolute; top: -18px; font-size: 32px; z-index: 5; }
+    .character-avatar { font-size: 54px; }
+    .character-name { font-size: 11px; font-weight: bold; color: var(--subtext); margin-top: 2px; }
+
+    /* Искры и партиклы */
+    .particle {
+      position: absolute;
+      pointer-events: none;
+      border-radius: 50%;
+      z-index: 100;
+      animation: particleFly 0.6s ease-out forwards;
+    }
+    @keyframes particleFly {
+      0% { transform: translate(0, 0) scale(1); opacity: 1; }
+      100% { transform: translate(var(--dx), var(--dy)) scale(0); opacity: 0; }
+    }
+
+    .floating-text {
+      position: absolute;
+      font-weight: 800;
+      font-size: 20px;
+      color: var(--accent);
+      pointer-events: none;
+      animation: floatUp 0.7s ease-out forwards;
+      z-index: 100;
+    }
+    @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-70px); } }
+
+    /* Пролетающий Дракон */
+    .dragon-event {
+      position: absolute;
+      top: 15px;
+      left: -60px;
+      font-size: 40px;
+      cursor: pointer;
+      z-index: 20;
+      transition: left 8s linear;
+    }
+
+    /* Шкалы */
+    .bar-container { width: 100%; max-width: 380px; margin-bottom: 8px; }
+    .bar-info { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; font-weight: 700; }
+    .bar-bg { width: 100%; height: 10px; background: var(--card); border-radius: 5px; overflow: hidden; border: 1px solid #2f3542; }
+    .bar-fill { height: 100%; width: 100%; background: var(--energy); transition: width 0.15s ease; }
+    .boss-fill { background: var(--danger); }
+
+    /* Панель Табов */
+    .tabs-nav {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      width: 100%;
+      max-width: 380px;
+      gap: 4px;
+      margin-bottom: 8px;
+    }
+    .tab-btn {
+      padding: 6px 2px;
+      background: var(--card);
+      border: 1px solid #2f3542;
+      border-radius: 6px;
+      color: var(--subtext);
+      font-weight: 700;
+      font-size: 10px;
+      cursor: pointer;
+      text-align: center;
+    }
+    .tab-btn.active { background: #202b3c; color: var(--accent); border-color: var(--accent); }
+
+    .tab-content {
+      width: 100%;
+      max-width: 380px;
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .tab-content.active { display: flex; }
+
+    .card-item {
+      background: var(--card);
+      border: 1px solid #2f3542;
+      border-radius: 8px;
+      padding: 10px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--text);
+    }
+    .card-item button {
+      background: #202b3c;
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 11px;
+      cursor: pointer;
+    }
+    .card-item button:disabled { opacity: 0.4; cursor: not-allowed; border-color: #555; color: #777; }
+
+    /* Токсичный Чат */
+    .chat-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 52px;
+      background: var(--chat-bg);
+      border-top: 2px solid #2f3542;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 14px;
+      z-index: 1000;
+    }
+    .chat-msg {
+      font-size: 12px;
+      color: #dcdde1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 250px;
+    }
+    .chat-msg b { color: #e84118; }
+    .mute-btn {
+      background: #c23616;
+      border: none;
+      color: #fff;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    /* Модалка Дейликов */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      padding: 16px;
+    }
+    .modal-card {
+      background: var(--card);
+      border: 2px solid var(--accent);
+      border-radius: 14px;
+      padding: 18px;
+      text-align: center;
+      max-width: 330px;
+      width: 100%;
+    }
+    .daily-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      margin: 12px 0;
+    }
+    .daily-day {
+      background: #0f1520;
+      border: 1px solid #2f3542;
+      border-radius: 6px;
+      padding: 6px 2px;
+      font-size: 10px;
+      color: var(--subtext);
+    }
+    .daily-day.claimed { border-color: var(--energy); color: var(--energy); }
+    .daily-day.current { border-color: var(--accent); background: #202b3c; color: #fff; }
+    .modal-btn {
+      width: 100%;
+      padding: 10px;
+      background: var(--accent);
+      border: none;
+      border-radius: 8px;
+      font-weight: 800;
+      cursor: pointer;
+      color: #000;
+      margin-top: 6px;
+    }
+  </style>
+</head>
+<body id="gameBody">
+
+  <!-- Окно Дейли-наград -->
+  <div class="modal-overlay" id="dailyModal">
+    <div class="modal-card">
+      <h3 style="color: var(--accent);">📅 Награда за вход!</h3>
+      <p style="font-size: 11px; color: var(--subtext); margin-top: 4px;">Заходи каждый день без перерывов:</p>
+      <div class="daily-grid" id="dailyGrid"></div>
+      <button class="modal-btn" id="claimDailyBtn">ЗАБРАТЬ НАГРАДУ</button>
+    </div>
+  </div>
+
+  <div class="header">
+    <div class="top-controls">
+      <button class="btn-badge" id="soundToggle">🔊 ВКЛ</button>
+      <div class="rank-badge" id="rankDisplay">Ранг: Дерево IV</div>
+      <button class="btn-badge" id="dailyBtn">🎁 Календарь</button>
+    </div>
+    
+    <div class="combo-badge" id="comboBadge">x1 COMBO!</div>
+    <div class="score-container"><span id="score">0</span> LP</div>
+    
+    <div class="currencies-row">
+      <div>🔷 Мастери: <span id="masteryDisplay">0</span></div>
+      <div>🗝️ Ключи: <span id="keysDisplay">0</span></div>
+      <div>Руна: <b id="activeRuneDisplay" style="color: var(--accent);">Ток ⚡</b></div>
+    </div>
+  </div>
+
+  <!-- Центральная Арена -->
+  <div class="arena" id="arenaBox">
+    <div class="character-btn" id="tapBtn">
+      <div class="character-hat" id="charHat"></div>
+      <div class="character-avatar" id="avatar">🌪️🤡</div>
+      <div class="character-name" id="charName">Ясик 0/10</div>
+    </div>
+  </div>
+
+  <!-- Энергия -->
+  <div class="bar-container" id="energyBox">
+    <div class="bar-info">
+      <span>⚡ Энергия</span>
+      <span><span id="energyText">500</span> / <span id="energyMaxText">500</span></span>
+    </div>
+    <div class="bar-bg"><div class="bar-fill" id="energyFill"></div></div>
+  </div>
+
+  <!-- Босс-панель -->
+  <div class="bar-container" id="bossBox" style="display: none;">
+    <div class="bar-info" style="color: var(--danger);">
+      <span>⚔️ ПРОМО: <span id="bossTimer">20</span>с</span>
+      <span>HP: <span id="bossHp">100</span></span>
+    </div>
+    <div class="bar-bg"><div class="bar-fill boss-fill" id="bossHpFill"></div></div>
+  </div>
+
+  <!-- Навигация табов -->
+  <div class="tabs-nav">
+    <button class="tab-btn active" onclick="switchTab('shop')">🛒 Лавка</button>
+    <button class="tab-btn" onclick="switchTab('runes')">🔮 Руны</button>
+    <button class="tab-btn" onclick="switchTab('heroes')">🦸 Герои</button>
+    <button class="tab-btn" onclick="switchTab('smurf')">🔷 Смурф</button>
+  </div>
+
+  <!-- Вкладка: Лавка -->
+  <div class="tab-content active" id="tab-shop">
+    <div class="card-item">
+      <div>
+        <div style="font-weight: 700; font-size: 12px;">Картонная Катана</div>
+        <div style="font-size: 10px; color: var(--subtext);">+1 к клику</div>
+      </div>
+      <button id="buyClickBtn">15 LP</button>
+    </div>
+    <div class="card-item">
+      <div>
+        <div style="font-weight: 700; font-size: 12px;">Песель на стеках</div>
+        <div style="font-size: 10px; color: var(--subtext);">+2 LP/сек пассивно</div>
+      </div>
+      <button id="buyPassiveBtn">50 LP</button>
+    </div>
+  </div>
+
+  <!-- Вкладка: Руны (Офлайн-билды) -->
+  <div class="tab-content" id="tab-runes">
+    <div class="card-item">
+      <div>
+        <div style="font-weight: 700; font-size: 12px;">⚡ Казнь током</div>
+        <div style="font-size: 10px; color: var(--subtext);">Каждый 3-й быстрый тап бьет с уроном x3</div>
+      </div>
+      <button id="runeElecBtn" onclick="selectRune('electrocute')">Выбрать</button>
+    </div>
+    <div class="card-item">
+      <div>
+        <div style="font-weight: 700; font-size: 12px;">🍪 Печенька из кармана</div>
+        <div style="font-size: 10px; color: var(--subtext);">+150 энергии раз в 60 секунд</div>
+      </div>
+      <button id="runeCookieBtn" onclick="selectRune('cookie')">Выбрать</button>
+    </div>
+    <div class="card-item">
+      <div>
+        <div style="font-weight: 700; font-size: 12px;">💀 Темная Жатва</div>
+        <div style="font-size: 10px; color: var(--subtext);">Урон x3 по промо-боссу, если его HP < 35%</div>
+      </div>
+      <button id="runeHarvestBtn" onclick="selectRune('harvest')">Выбрать</button>
+    </div>
+  </div>
+
+  <!-- Вкладка: Герои -->
+  <div class="tab-content" id="tab-heroes">
+    <div class="card-item">
+      <div>
+        <div style="font-weight: 700; font-size: 12px;">🌪️ Ясик 0/10</div>
+        <div style="font-size: 10px; color: var(--subtext);">Базовый тап, мощное комбо</div>
+      </div>
+      <button id="btnHeroYasuo" onclick="selectHero('yasuo')">Выбрать</button>
+    </div>
+    <div class="card-item">
+      <div>
+        <div style="font-weight: 700; font-size: 12px;">🐱 Кот-Хукер (Блиц)</div>
+        <div style="font-size: 10px; color: var(--subtext);">Авто-хук: ворует LP каждые 20 сек</div>
+      </div>
+      <button id="btnHeroBlitz" onclick="selectHero('blitz')">Выбрать</button>
+    </div>
+    <div class="card-item">
+      <div>
+        <div style="font-weight: 700; font-size: 12px;">🗿 Мальфит-Скала</div>
+        <div style="font-size: 10px; color: var(--subtext);">1500 Энергии, x3 урон по боссам</div>
+      </div>
+      <button id="btnHeroMalphite" onclick="selectHero('malphite')">Выбрать</button>
+    </div>
+  </div>
+
+  <!-- Вкладка: Смурфинг -->
+  <div class="tab-content" id="tab-smurf">
+    <div class="card-item">
+      <div>
+        <div style="font-weight: 700; font-size: 12px;">🔄 Купить Смурф-акк</div>
+        <div style="font-size: 10px; color: var(--subtext);">Сброс ранга и LP за Осколки Мастери</div>
+      </div>
+      <button id="prestigeBtn">Смурфить</button>
+    </div>
+  </div>
+
+  <!-- Токсичный Чат Тиммейтов -->
+  <div class="chat-bar">
+    <div class="chat-msg" id="chatMsg"><b>Лесник:</b> Ясик, хватит фидить на миду!</div>
+    <button class="mute-btn" id="muteBtn">Замутить 🔇</button>
+  </div>
+
+  <script>
+    const tg = window.Telegram?.WebApp;
+    if (tg) { tg.ready(); tg.expand(); }
+
+    // Звуковой движок Web Audio
+    let soundEnabled = true;
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    let audioCtx = null;
+
+    function playTone(freq, type = 'sine', duration = 0.08, vol = 0.1) {
+      if (!soundEnabled) return;
+      try {
+        if (!audioCtx) audioCtx = new AudioCtx();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (e) {}
+    }
+
+    const Sound = {
+      tap: () => playTone(360, 'sine', 0.05, 0.08),
+      crit: () => { playTone(540, 'triangle', 0.08, 0.15); setTimeout(() => playTone(900, 'triangle', 0.12, 0.2), 40); },
+      win: () => { [440, 554, 659, 880].forEach((f, i) => setTimeout(() => playTone(f, 'square', 0.15, 0.1), i * 100)); },
+      mute: () => playTone(200, 'sine', 0.2, 0.15)
+    };
+
+    document.getElementById('soundToggle').addEventListener('click', () => {
+      soundEnabled = !soundEnabled;
+      document.getElementById('soundToggle').textContent = soundEnabled ? "🔊 ВКЛ" : "🔇 ВЫКЛ";
+    });
+
+    const RANKS = ["Дерево IV", "Дерево I", "Картон IV", "Картон I", "Медь", "Претендент Палаты"];
+    const HERO_COOLDOWN_SEC = 180;
+
+    // Сохранение и состояние
+    let state = JSON.parse(localStorage.getItem('clown_league_offline_v6')) || {
+      score: 0,
+      clickPower: 1,
+      passivePower: 0,
+      energy: 500,
+      maxEnergy: 500,
+      costClick: 15,
+      costPassive: 50,
+      rankIndex: 0,
+      masteryShards: 0,
+      keys: 1,
+      selectedHero: "yasuo",
+      selectedRune: "electrocute",
+      lastHeroChangeTime: 0,
+      // Дейлики
+      dailyStreak: 0,
+      lastDailyDate: ""
+    };
+
+    let comboCount = 0;
+    let comboMultiplier = 1;
+    let lastTapTime = 0;
+    let rapidTapsCount = 0;
+    let focusBuffActive = false;
+    let dragonBuffActive = false;
+
+    // Босс
+    let bossMode = false;
+    let bossMaxHp = 100;
+    let bossCurrentHp = 100;
+    let bossTimeLeft = 20;
+    let bossInterval = null;
+
+    // UI
+    const gameBody = document.getElementById('gameBody');
+    const arenaBox = document.getElementById('arenaBox');
+    const scoreEl = document.getElementById('score');
+    const rankEl = document.getElementById('rankDisplay');
+    const masteryEl = document.getElementById('masteryDisplay');
+    const keysEl = document.getElementById('keysDisplay');
+    const runeDisplayEl = document.getElementById('activeRuneDisplay');
+    const comboBadge = document.getElementById('comboBadge');
+
+    const tapBtn = document.getElementById('tapBtn');
+    const avatarEl = document.getElementById('avatar');
+    const charNameEl = document.getElementById('charName');
+    const charHatEl = document.getElementById('charHat');
+
+    const energyBox = document.getElementById('energyBox');
+    const energyTextEl = document.getElementById('energyText');
+    const energyMaxTextEl = document.getElementById('energyMaxText');
+    const energyFillEl = document.getElementById('energyFill');
+
+    const bossBox = document.getElementById('bossBox');
+    const bossTimerEl = document.getElementById('bossTimer');
+    const bossHpEl = document.getElementById('bossHp');
+    const bossHpFill = document.getElementById('bossHpFill');
+
+    const buyClickBtn = document.getElementById('buyClickBtn');
+    const buyPassiveBtn = document.getElementById('buyPassiveBtn');
+
+    // Кнопки героев
+    const btnHeroYasuo = document.getElementById('btnHeroYasuo');
+    const btnHeroBlitz = document.getElementById('btnHeroBlitz');
+    const btnHeroMalphite = document.getElementById('btnHeroMalphite');
+
+    function saveGame() {
+      localStorage.setItem('clown_league_offline_v6', JSON.stringify(state));
+    }
+
+    // Тряска экрана
+    function triggerShake() {
+      gameBody.classList.remove('shake');
+      void gameBody.offsetWidth; // перезапуск анимации
+      gameBody.classList.add('shake');
+    }
+
+    // Искры (Particles)
+    function spawnParticles(x, y, color = '#f5a623') {
+      for (let i = 0; i < 7; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        const size = Math.random() * 6 + 4;
+        p.style.width = `${size}px`;
+        p.style.height = `${size}px`;
+        p.style.background = color;
+        p.style.left = `${x}px`;
+        p.style.top = `${y}px`;
+
+        const angle = Math.random() * Math.PI * 2;
+        const dist = Math.random() * 50 + 20;
+        p.style.setProperty('--dx', `${Math.cos(angle) * dist}px`);
+        p.style.setProperty('--dy', `${Math.sin(angle) * dist}px`);
+
+        document.body.appendChild(p);
+        setTimeout(() => p.remove(), 600);
+      }
+    }
+
+    function createFloatingText(x, y, text, color = null) {
+      const el = document.createElement('div');
+      el.className = 'floating-text';
+      el.textContent = text;
+      if (color) el.style.color = color;
+      el.style.left = `${x}px`;
+      el.style.top = `${y}px`;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 700);
+    }
+
+    // Динамическая смена атмосферы ранга
+    function updateRankAtmosphere() {
+      if (state.rankIndex <= 1) {
+        // Дерево: болотный лес
+        arenaBox.style.setProperty('--arena-gradient', 'radial-gradient(circle, #1a251a 0%, #0b110b 100%)');
+      } else if (state.rankIndex <= 3) {
+        // Картон: бумажный склад
+        arenaBox.style.setProperty('--arena-gradient', 'radial-gradient(circle, #2d241e 0%, #15100c 100%)');
+      } else if (state.rankIndex === 4) {
+        // Медь: ржавый индустриальный завод
+        arenaBox.style.setProperty('--arena-gradient', 'radial-gradient(circle, #361f18 0%, #180c08 100%)');
+      } else {
+        // Претендент: золотой дворец
+        arenaBox.style.setProperty('--arena-gradient', 'radial-gradient(circle, #4a3810 0%, #1c1504 100%)');
+      }
+    }
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      event.target.classList.add('active');
+      document.getElementById(`tab-${tabId}`).classList.add('active');
+    }
+
+    function selectRune(rune) {
+      state.selectedRune = rune;
+      saveGame();
+      updateUI();
+      alert(`Выбрана руна: ${runeDisplayEl.textContent}!`);
+    }
+
+    function applyHeroStats(hero) {
+      if (hero === 'yasuo') {
+        avatarEl.textContent = "🌪️🤡";
+        charNameEl.textContent = "Ясик 0/10";
+        state.maxEnergy = 500;
+      } else if (hero === 'blitz') {
+        avatarEl.textContent = "🐱🤖";
+        charNameEl.textContent = "Кот-Хукер";
+        state.maxEnergy = 500;
+      } else if (hero === 'malphite') {
+        avatarEl.textContent = "🗿🪨";
+        charNameEl.textContent = "Мальфит-Скала";
+        state.maxEnergy = 1500;
+      }
+    }
+
+    function selectHero(hero) {
+      if (bossMode) { alert("⛔ Нельзя менять чемпиона посреди битвы с боссом!"); return; }
+      if (state.selectedHero === hero) { alert("Этот чемпион уже выбран!"); return; }
+
+      const now = Date.now();
+      const secondsLeft = Math.ceil((state.lastHeroChangeTime + HERO_COOLDOWN_SEC * 1000 - now) / 1000);
+      if (secondsLeft > 0) { alert(`⏳ Смена чемпиона на перезарядке! Подожди еще ${secondsLeft}с.`); return; }
+
+      state.selectedHero = hero;
+      state.lastHeroChangeTime = now;
+      state.energy = 0;
+
+      applyHeroStats(hero);
+      saveGame();
+      updateUI();
+      alert(`Выбран чемпион: ${charNameEl.textContent}! Энергия сброшена.`);
+    }
+
+    function updateHeroButtons() {
+      const now = Date.now();
+      const secondsLeft = Math.ceil((state.lastHeroChangeTime + HERO_COOLDOWN_SEC * 1000 - now) / 1000);
+      const isCooldown = secondsLeft > 0;
+
+      const heroes = [
+        { id: 'yasuo', btn: btnHeroYasuo },
+        { id: 'blitz', btn: btnHeroBlitz },
+        { id: 'malphite', btn: btnHeroMalphite }
+      ];
+
+      heroes.forEach(h => {
+        if (state.selectedHero === h.id) {
+          h.btn.textContent = "Выбран ✓";
+          h.btn.disabled = true;
+        } else if (isCooldown) {
+          h.btn.textContent = `КД: ${secondsLeft}с`;
+          h.btn.disabled = true;
+        } else {
+          h.btn.textContent = "Выбрать";
+          h.btn.disabled = false;
+        }
+      });
+    }
+
+    function updateUI() {
+      scoreEl.textContent = Math.floor(state.score);
+      rankEl.textContent = `Ранг: ${RANKS[state.rankIndex] || "Претендент"}`;
+      masteryEl.textContent = state.masteryShards;
+      keysEl.textContent = state.keys;
+
+      if (state.selectedRune === 'electrocute') runeDisplayEl.textContent = "Ток ⚡";
+      else if (state.selectedRune === 'cookie') runeDisplayEl.textContent = "Печенье 🍪";
+      else runeDisplayEl.textContent = "Жатва 💀";
+
+      document.getElementById('runeElecBtn').disabled = state.selectedRune === 'electrocute';
+      document.getElementById('runeCookieBtn').disabled = state.selectedRune === 'cookie';
+      document.getElementById('runeHarvestBtn').disabled = state.selectedRune === 'harvest';
+
+      energyTextEl.textContent = Math.floor(state.energy);
+      energyMaxTextEl.textContent = state.maxEnergy;
+      energyFillEl.style.width = `${(state.energy / state.maxEnergy) * 100}%`;
+
+      buyClickBtn.textContent = `${state.costClick} LP`;
+      buyPassiveBtn.textContent = `${state.costPassive} LP`;
+      buyClickBtn.disabled = state.score < state.costClick;
+      buyPassiveBtn.disabled = state.score < state.costPassive;
+
+      updateHeroButtons();
+      updateRankAtmosphere();
+    }
+
+    // Обработка тапа с рунами и эффектами
+    tapBtn.addEventListener('pointerdown', (e) => {
+      const now = Date.now();
+      const rect = tapBtn.getBoundingClientRect();
+      const spawnX = e.clientX || (rect.left + rect.width / 2);
+      const spawnY = (e.clientY || rect.top) - 15;
+
+      // Быстрые клики (Комбо)
+      if (now - lastTapTime < 350) {
+        comboCount++;
+        rapidTapsCount++;
+        if (comboCount > 12) comboMultiplier = 2.5;
+        else if (comboCount > 5) comboMultiplier = 1.5;
+      } else {
+        comboCount = 0;
+        rapidTapsCount = 0;
+        comboMultiplier = 1;
+      }
+      lastTapTime = now;
+
+      if (comboMultiplier > 1) {
+        comboBadge.textContent = `x${comboMultiplier} COMBO!`;
+        comboBadge.classList.add('active');
+      } else {
+        comboBadge.classList.remove('active');
+      }
+
+      // Руна: Казнь током ⚡ (каждый 3-й быстрый тап)
+      let runeMultiplier = 1;
+      if (state.selectedRune === 'electrocute' && rapidTapsCount >= 3) {
+        runeMultiplier = 3;
+        rapidTapsCount = 0;
+        triggerShake();
+        Sound.crit();
+        createFloatingText(spawnX, spawnY - 20, "⚡ УДАР ТОКОМ x3!", "#00d2d3");
+        spawnParticles(spawnX, spawnY, "#00d2d3");
+      }
+
+      // Руна: Темная Жатва 💀 (на боссе лоу-HP)
+      if (bossMode && state.selectedRune === 'harvest' && (bossCurrentHp / bossMaxHp) < 0.35) {
+        runeMultiplier = 3;
+      }
+
+      let heroBossMult = (bossMode && state.selectedHero === 'malphite') ? 3 : 1;
+      let dragonMult = dragonBuffActive ? 1.5 : 1;
+      let totalHit = Math.floor(state.clickPower * comboMultiplier * runeMultiplier * heroBossMult * dragonMult);
+
+      spawnParticles(spawnX, spawnY);
+
+      if (bossMode) {
+        bossCurrentHp -= totalHit;
+        Sound.crit();
+        triggerShake();
+        createFloatingText(spawnX, spawnY, `-${totalHit} HP`, 'var(--danger)');
+        bossHpEl.textContent = Math.max(0, bossCurrentHp);
+        bossHpFill.style.width = `${Math.max(0, (bossCurrentHp / bossMaxHp) * 100)}%`;
+        if (bossCurrentHp <= 0) endBossPromo(true);
+      } else {
+        if (state.energy >= 1) {
+          state.score += totalHit;
+          state.energy -= 1;
+          Sound.tap();
+          createFloatingText(spawnX, spawnY, `+${totalHit}`);
+
+          if (state.score >= 100 && state.rankIndex < RANKS.length - 1) {
+            startBossPromo();
+          }
+        }
+      }
+
+      if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+      updateUI();
+    });
+
+    // Промо-битва
+    function startBossPromo() {
+      bossMode = true;
+      bossMaxHp = 60 * (state.rankIndex + 1);
+      bossCurrentHp = bossMaxHp;
+      bossTimeLeft = 20;
+
+      avatarEl.textContent = "🦀👾";
+      charNameEl.textContent = "ПРОМО-БОСС";
+      tapBtn.classList.add('boss-mode');
+      energyBox.style.display = 'none';
+      bossBox.style.display = 'block';
+
+      bossInterval = setInterval(() => {
+        bossTimeLeft--;
+        bossTimerEl.textContent = bossTimeLeft;
+        if (bossTimeLeft <= 0) endBossPromo(false);
+      }, 1000);
+    }
+
+    function endBossPromo(won) {
+      clearInterval(bossInterval);
+      bossMode = false;
+      tapBtn.classList.remove('boss-mode');
+      applyHeroStats(state.selectedHero);
+      energyBox.style.display = 'block';
+      bossBox.style.display = 'none';
+
+      if (won) {
+        state.rankIndex = Math.min(state.rankIndex + 1, RANKS.length - 1);
+        state.score = 0;
+        state.keys += 1;
+        Sound.win();
+        triggerShake();
+        alert(`🏆 ПОБЕДА! Ты повысил ранг до: ${RANKS[state.rankIndex]}! Получен +1 Ключ!`);
+      } else {
+        state.score = 70;
+        alert("💀 ТИЛЬТ! Промо слито, откат на 70 LP.");
+      }
+      saveGame();
+      updateUI();
+    }
+
+    // Редкое событие: Огненный Дракон 🐉
+    setInterval(() => {
+      if (bossMode) return;
+      if (Math.random() < 0.4) {
+        const dragon = document.createElement('div');
+        dragon.className = 'dragon-event';
+        dragon.textContent = '🐉';
+        arenaBox.appendChild(dragon);
+
+        setTimeout(() => { dragon.style.left = '110%'; }, 50);
+
+        dragon.addEventListener('pointerdown', (e) => {
+          e.stopPropagation();
+          dragon.remove();
+          dragonBuffActive = true;
+          triggerShake();
+          Sound.crit();
+          createFloatingText(e.clientX, e.clientY, "ДРАКОНИЙ РАЖ! Урон +50% на 45с!", "#ff4757");
+          setTimeout(() => { dragonBuffActive = false; }, 45000);
+        });
+
+        setTimeout(() => { if (dragon.parentElement) dragon.remove(); }, 8000);
+      }
+    }, 45000);
+
+    // Руна: Печенька 🍪 (раз в 60 сек даёт +150 энергии)
+    setInterval(() => {
+      if (state.selectedRune === 'cookie') {
+        state.energy = Math.min(state.maxEnergy, state.energy + 150);
+        createFloatingText(160, 100, "🍪 Печенька: +150 Энергии!", "#f5a623");
+        updateUI();
+      }
+    }, 60000);
+
+    // Пассивка Блица
+    setInterval(() => {
+      if (state.selectedHero === 'blitz' && !bossMode) {
+        let hookLp = 40 * (state.rankIndex + 1);
+        state.score += hookLp;
+        createFloatingText(150, 100, `🎣 ХУК! +${hookLp} LP!`, "#2ed573");
+        Sound.crit();
+        updateUI();
+      }
+    }, 20000);
+
+    // Фейковый токсичный чат
+    const TOXIC_REMARKS = [
+      "Лесник, ты вообще на карту смотришь?!",
+      "FF15 анлак, сдаемся",
+      "Ясик уже 0/10, репортните его",
+      "Вражеский мидер уже 10/0, спасибо",
+      "Саппорт, поставь хоть один вард!"
+    ];
+
+    setInterval(() => {
+      const randMsg = TOXIC_REMARKS[Math.floor(Math.random() * TOXIC_REMARKS.length)];
+      document.getElementById('chatMsg').innerHTML = `<b>Тиммейт:</b> ${randMsg}`;
+    }, 8000);
+
+    document.getElementById('muteBtn').addEventListener('click', () => {
+      Sound.mute();
+      focusBuffActive = true;
+      document.getElementById('chatMsg').innerHTML = `<b style="color: #2ed573;">Чат заглушен! Фокус +50% пассивного LP на 30с</b>`;
+      setTimeout(() => { focusBuffActive = false; }, 30000);
+    });
+
+    // Офлайн Дейли-Календарь (Daily Streak)
+    const DAILY_REWARDS = [
+      "+150 LP", "+1 Ключ 🗝️", "+300 LP", "+2 Ключа 🗝️", "+500 LP", "+3 Ключа 🗝️", "👑 Корона"
+    ];
+
+    function checkDailyStatus() {
+      const today = new Date().toDateString();
+      const grid = document.getElementById('dailyGrid');
+      grid.innerHTML = '';
+
+      DAILY_REWARDS.forEach((rew, idx) => {
+        const box = document.createElement('div');
+        box.className = 'daily-day';
+        if (idx < state.dailyStreak) box.classList.add('claimed');
+        if (idx === state.dailyStreak) box.classList.add('current');
+        box.innerHTML = `<div>День ${idx + 1}</div><b style="font-size:9px;">${rew}</b>`;
+        grid.appendChild(box);
+      });
+
+      const canClaim = state.lastDailyDate !== today;
+      document.getElementById('claimDailyBtn').disabled = !canClaim;
+      document.getElementById('claimDailyBtn').textContent = canClaim ? "ЗАБРАТЬ НАГРАДУ" : "УЖЕ ЗАБРАНО СЕГОДНЯ ✓";
+    }
+
+    document.getElementById('dailyBtn').addEventListener('click', () => {
+      checkDailyStatus();
+      document.getElementById('dailyModal').style.display = 'flex';
+    });
+
+    document.getElementById('claimDailyBtn').addEventListener('click', () => {
+      const today = new Date().toDateString();
+      if (state.lastDailyDate === today) return;
+
+      const rew = DAILY_REWARDS[state.dailyStreak];
+      if (state.dailyStreak === 0) state.score += 150;
+      else if (state.dailyStreak === 1) state.keys += 1;
+      else if (state.dailyStreak === 2) state.score += 300;
+      else if (state.dailyStreak === 3) state.keys += 2;
+      else if (state.dailyStreak === 4) state.score += 500;
+      else if (state.dailyStreak === 5) state.keys += 3;
+      else if (state.dailyStreak === 6) {
+        charHatEl.textContent = "👑";
+        alert("👑 ТЫ ПОЛУЧИЛ ЗОЛОТУЮ КОРОНУ ПРЕЗИДЕНТА ПАЛАТЫ!");
+      }
+
+      state.lastDailyDate = today;
+      state.dailyStreak = (state.dailyStreak + 1) % 7;
+      saveGame();
+      Sound.win();
+      alert(`Награда за день получена: ${rew}!`);
+      document.getElementById('dailyModal').style.display = 'none';
+      updateUI();
+    });
+
+    // Покупки
+    buyClickBtn.addEventListener('click', () => {
+      if (state.score >= state.costClick) {
+        state.score -= state.costClick;
+        state.clickPower += 1;
+        state.costClick = Math.floor(state.costClick * 1.5);
+        saveGame();
+        updateUI();
+      }
+    });
+
+    buyPassiveBtn.addEventListener('click', () => {
+      if (state.score >= state.costPassive) {
+        state.score -= state.costPassive;
+        state.passivePower += 2;
+        state.costPassive = Math.floor(state.costPassive * 1.6);
+        saveGame();
+        updateUI();
+      }
+    });
+
+    // Смурфинг
+    document.getElementById('prestigeBtn').addEventListener('click', () => {
+      let reward = Math.max(0, state.rankIndex * 2);
+      if (reward === 0) { alert("Нужен хотя бы ранг Дерево I для смурфинга!"); return; }
+
+      if (confirm(`Купить смурф-аккаунт? Ранг и LP сбросятся, но ты получишь +${reward} 🔷 Осколков Мастери!`)) {
+        state.masteryShards += reward;
+        state.score = 0;
+        state.rankIndex = 0;
+        state.clickPower = 1;
+        state.costClick = 15;
+        Sound.win();
+        saveGame();
+        updateUI();
+      }
+    });
+
+    // Игровой цикл (пассивный фарм)
+    setInterval(() => {
+      if (!bossMode) {
+        let effPassive = state.passivePower * (focusBuffActive ? 1.5 : 1);
+        if (effPassive > 0) state.score += effPassive;
+
+        if (state.energy < state.maxEnergy) {
+          state.energy = Math.min(state.maxEnergy, state.energy + 3);
+        }
+
+        if (state.score >= 100 && state.rankIndex < RANKS.length - 1) {
+          startBossPromo();
+        }
+      }
+      saveGame();
+      updateUI();
+    }, 1000);
+
+    // Первичная инициализация
+    applyHeroStats(state.selectedHero);
+    updateUI();
+  </script>
+</body>
+</html>
+
