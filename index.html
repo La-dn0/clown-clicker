@@ -172,7 +172,6 @@
     }
     @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.05); } }
 
-    /* Банхаммер оверлей на кнопку */
     .character-btn.banned {
       border-color: var(--danger) !important;
       background: #1e0508 !important;
@@ -236,22 +235,23 @@
 
     .tabs-nav {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(5, 1fr);
       width: 100%;
-      max-width: 380px;
-      gap: 4px;
+      max-width: 390px;
+      gap: 3px;
       margin-bottom: 6px;
     }
     .tab-btn {
-      padding: 6px 2px;
+      padding: 6px 1px;
       background: var(--card);
       border: 1px solid #2f3542;
       border-radius: 6px;
       color: var(--subtext);
       font-weight: 700;
-      font-size: 10px;
+      font-size: 9.5px;
       cursor: pointer;
       text-align: center;
+      white-space: nowrap;
     }
     .tab-btn.active { background: #202b3c; color: var(--accent); border-color: var(--accent); }
 
@@ -264,6 +264,15 @@
       margin-bottom: 8px;
     }
     .tab-content.active { display: flex; }
+
+    .donate-header {
+      font-size: 11px;
+      font-weight: 800;
+      color: #ffd32a;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin: 4px 0 2px 2px;
+    }
 
     .card-item {
       background: var(--card);
@@ -293,6 +302,14 @@
       text-align: center;
     }
     .card-item button:disabled { opacity: 0.4; cursor: not-allowed; border-color: #555; color: #777; }
+
+    .hero-btn-group {
+      display: flex;
+      gap: 4px;
+    }
+    .hero-btn-group button {
+      min-width: 50px;
+    }
 
     .chat-bar {
       position: fixed;
@@ -411,6 +428,42 @@
     .modal-btn:active { transform: scale(0.97); box-shadow: 0 2px 8px rgba(245, 166, 35, 0.2); }
     .modal-btn:disabled { background: #222c3c; color: #576574; box-shadow: none; cursor: not-allowed; }
 
+    .gacha-card {
+      background: radial-gradient(circle, #24334a 0%, #101622 100%);
+      border: 1.5px solid #00d2d3;
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 8px;
+      box-shadow: 0 0 15px rgba(0, 210, 211, 0.25);
+    }
+    .gacha-box-icon {
+      font-size: 45px;
+      animation: pulse 1.2s infinite alternate;
+    }
+    .gacha-btn-single {
+      width: 100%;
+      margin-top: 8px;
+      padding: 10px;
+      border-radius: 8px;
+      font-weight: 800;
+      font-size: 12px;
+      cursor: pointer;
+      border: 1.5px solid #00d2d3;
+      background: #182232;
+      color: #00d2d3;
+      transition: background 0.1s;
+    }
+    .gacha-btn-single:active {
+      background: #00d2d3;
+      color: #000;
+    }
+    .gacha-btn-single:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      border-color: #555;
+      color: #777;
+    }
+
     .daily-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -500,6 +553,7 @@
 </head>
 <body id="gameBody">
 
+  <!-- Окно Дороги Рангов -->
   <div class="modal-overlay" id="ranksModal">
     <div class="modal-card">
       <button class="close-corner-btn" onclick="closeModal('ranksModal')">✕</button>
@@ -511,6 +565,19 @@
     </div>
   </div>
 
+  <!-- Окно Результата Гачи -->
+  <div class="modal-overlay" id="gachaResultModal">
+    <div class="modal-card" style="border-color: #00d2d3;">
+      <button class="close-corner-btn" onclick="closeModal('gachaResultModal')">✕</button>
+      <div class="modal-header-icon" id="gachaResIcon">🎁</div>
+      <div class="modal-title" id="gachaResTitle">Получен чемпион!</div>
+      <p style="font-size: 12px; color: var(--accent); margin: 8px 0;" id="gachaResRarity">РЕДКОСТЬ</p>
+      <p style="font-size: 11px; color: #c8d6e5; line-height: 1.4;" id="gachaResDesc"></p>
+      <button class="modal-btn" onclick="closeModal('gachaResultModal')">ЗАБРАТЬ</button>
+    </div>
+  </div>
+
+  <!-- Окно Помощи -->
   <div class="modal-overlay" id="helpModal">
     <div class="modal-card">
       <button class="close-corner-btn" onclick="closeModal('helpModal')">✕</button>
@@ -519,42 +586,23 @@
       <div class="modal-subtitle">Как не застрять на Дне Палаты:</div>
 
       <div class="guide-section">
+        <div class="guide-title">🎁 Хекстек-Гача за Осколки</div>
+        <div class="guide-text">
+          Во вкладке «Герои» можно крутить сундук за <b>4 🔷 Осколка Мастери</b> (максимальный уровень героев — <b>15</b>)!
+        </div>
+      </div>
+
+      <div class="guide-section">
+        <div class="guide-title">⭐️ Telegram Stars (Донат)</div>
+        <div class="guide-text">
+          Во вкладке «⭐️ Донат» можно докупить <b>Ключи 🗝️</b> и <b>Осколки 🔷</b> для быстрой прокачки.
+        </div>
+      </div>
+
+      <div class="guide-section">
         <div class="guide-title">🛡️ Античит Vanguard</div>
         <div class="guide-text">
-          Использование скриптов и сторонних кликеров карается <b>блокировкой клика на 12 секунд</b>! Играйте пальцами честно.
-        </div>
-      </div>
-
-      <div class="guide-section">
-        <div class="guide-title">⚡ Медленная Энергия</div>
-        <div class="guide-text">
-          Каждый клик тратит <b>2 энергии</b>. Регенерация замедлена: всего <b>+1 энергии/сек</b>. Берегите клики перед боссами или берите руну «Печенька»!
-        </div>
-      </div>
-
-      <div class="guide-section">
-        <div class="guide-title">🔮 Платные Руны и КД 5 минут</div>
-        <div class="guide-text">
-          Смена руны стоит LP и запускает кулдаун на <b>5 минут</b>. Выбирайте руну осознанно под свой текущий стиль игры.
-        </div>
-      </div>
-
-      <div class="guide-section">
-        <div class="guide-title">🔄 Платный Смурфинг (Престиж)</div>
-        <div class="guide-text">
-          Доступен с «Дерева I». Покупка смурф-аккаунта стоит <b>2 Ключа 🗝️</b>! Вы сбрасываете ранг и LP, взамен получая ценные <b>🔷 Осколки Мастери</b> для трансфера чемпионов.
-        </div>
-      </div>
-
-      <div class="guide-section">
-        <div class="guide-title">🦸 Чемпионы за 🔷 Осколки</div>
-        <div class="guide-text">
-          • <b>Ясик:</b> быстрые комбо-серии.<br>
-          • <b>Кот-Хукер:</b> ворует LP каждые 20 сек.<br>
-          • <b>Мальфит:</b> 1500 энергии и <b>x3 урон по боссам</b>.<br>
-          • <b>Грибовед Тимка:</b> отравляет босса и цель ядом.<br>
-          • <b>Дядя Дариус:</b> казнит босса при HP &lt; 15%.<br>
-          • <b>Лисичка Ари:</b> восстанавливает +10 энергии каждые 10 тапов.
+          Использование автокликеров карается <b>прогрессивным баном</b> и <b>конфискацией LP</b>!
         </div>
       </div>
 
@@ -562,6 +610,7 @@
     </div>
   </div>
 
+  <!-- Окно Дейликов -->
   <div class="modal-overlay" id="dailyModal">
     <div class="modal-card">
       <button class="close-corner-btn" onclick="closeModal('dailyModal')">✕</button>
@@ -575,6 +624,7 @@
     </div>
   </div>
 
+  <!-- Верхняя панель -->
   <div class="header">
     <div class="top-controls">
       <button class="btn-badge" id="soundToggle">🔊 ВКЛ</button>
@@ -595,6 +645,7 @@
     </div>
   </div>
 
+  <!-- Арена -->
   <div class="arena" id="arenaBox">
     <div class="character-btn" id="tapBtn">
       <div class="character-hat" id="charHat"></div>
@@ -603,14 +654,16 @@
     </div>
   </div>
 
+  <!-- Энергия -->
   <div class="bar-container" id="energyBox">
     <div class="bar-info">
-      <span>⚡ Энергия (+1/с)</span>
+      <span id="energySpeedLabel">⚡ Энергия (+1 / 30с)</span>
       <span><span id="energyText">500</span> / <span id="energyMaxText">500</span></span>
     </div>
     <div class="bar-bg"><div class="bar-fill" id="energyFill"></div></div>
   </div>
 
+  <!-- Босс-полоса -->
   <div class="bar-container" id="bossBox" style="display: none;">
     <div class="bar-info" style="color: var(--danger);">
       <span>⚔️ ПРОМО: <span id="bossTimer">20</span>с</span>
@@ -619,13 +672,16 @@
     <div class="bar-bg"><div class="bar-fill boss-fill" id="bossHpFill"></div></div>
   </div>
 
+  <!-- Табы -->
   <div class="tabs-nav">
     <button class="tab-btn active" onclick="switchTab('shop')">🛒 Лавка</button>
     <button class="tab-btn" onclick="switchTab('runes')">🔮 Руны</button>
     <button class="tab-btn" onclick="switchTab('heroes')">🦸 Герои</button>
     <button class="tab-btn" onclick="switchTab('smurf')">🔷 Смурф</button>
+    <button class="tab-btn" onclick="switchTab('donate')" style="color: #ffd32a; font-weight: 900;">⭐️ Донат</button>
   </div>
 
+  <!-- Таб: Лавка -->
   <div class="tab-content active" id="tab-shop">
     <div class="card-item clickable-card" id="cardBuyClick">
       <div>
@@ -641,8 +697,16 @@
       </div>
       <button id="buyPassiveBtn">50 LP</button>
     </div>
+    <div class="card-item" id="cardEnergyUpgrade">
+      <div>
+        <div style="font-weight: 700; font-size: 12px;">⚡ Энерго-Ускоритель</div>
+        <div style="font-size: 10px; color: var(--subtext);" id="energyUpgradeDesc">-3 сек к перезарядке энергии (макс до 10с)</div>
+      </div>
+      <button id="buyEnergyRegenBtn" onclick="upgradeEnergyRegen()">1 🗝️</button>
+    </div>
   </div>
 
+  <!-- Таб: Руны -->
   <div class="tab-content" id="tab-runes">
     <div class="card-item">
       <div>
@@ -667,51 +731,82 @@
     </div>
   </div>
 
+  <!-- Таб: Герои -->
   <div class="tab-content" id="tab-heroes">
+    <div class="gacha-card">
+      <div style="display: flex; align-items: center; justify-content: space-between;">
+        <div>
+          <div style="font-weight: 800; font-size: 13px; color: #00d2d3;">🎁 Хекстек-Сундук (Гача)</div>
+          <div style="font-size: 10px; color: #a4b0be; margin-top: 2px;">Случайный герой или +1 Ур. (макс 15)</div>
+        </div>
+        <div class="gacha-box-icon">📦</div>
+      </div>
+      <button class="gacha-btn-single" onclick="pullGachaMastery()" id="gachaMasteryBtn">Открыть за 4 🔷 Осколка</button>
+    </div>
+
     <div class="card-item">
       <div>
-        <div style="font-weight: 700; font-size: 12px;">🌪️ Ясик 0/10</div>
-        <div style="font-size: 10px; color: var(--subtext);">Стартовый: быстрое комбо тапа</div>
+        <div style="font-weight: 700; font-size: 12px;">🌪️ Ясик 0/10 <span id="heroLvl_yasuo" style="color: var(--accent);">(Ур. 1/15)</span></div>
+        <div style="font-size: 10px; color: var(--subtext);">Быстрое комбо тапа (+урон за уровень)</div>
       </div>
-      <button id="btnHero_yasuo" onclick="selectHero('yasuo')">2 🔷</button>
+      <div class="hero-btn-group">
+        <button id="btnHero_yasuo" onclick="selectHero('yasuo')">Выбрать</button>
+        <button id="upHero_yasuo" onclick="upgradeHero('yasuo')" style="border-color: #00d2d3; color: #00d2d3;">+1 🔷</button>
+      </div>
     </div>
     <div class="card-item">
       <div>
-        <div style="font-weight: 700; font-size: 12px;">🐱 Кот-Хукер (Блиц)</div>
-        <div style="font-size: 10px; color: var(--subtext);">Авто-хук: ворует LP каждые 20 сек</div>
+        <div style="font-weight: 700; font-size: 12px;">🐱 Кот-Хукер <span id="heroLvl_blitz" style="color: var(--accent);">(Ур. 1/15)</span></div>
+        <div style="font-size: 10px; color: var(--subtext);">Авто-хук ворует LP каждые 20 сек</div>
       </div>
-      <button id="btnHero_blitz" onclick="selectHero('blitz')">2 🔷</button>
+      <div class="hero-btn-group">
+        <button id="btnHero_blitz" onclick="selectHero('blitz')">2 🔷</button>
+        <button id="upHero_blitz" onclick="upgradeHero('blitz')" style="border-color: #00d2d3; color: #00d2d3;">+1 🔷</button>
+      </div>
     </div>
     <div class="card-item">
       <div>
-        <div style="font-weight: 700; font-size: 12px;">🗿 Мальфит-Скала</div>
-        <div style="font-size: 10px; color: var(--subtext);">1500 энергии, x3 урон по промо-боссам</div>
+        <div style="font-weight: 700; font-size: 12px;">🗿 Мальфит-Скала <span id="heroLvl_malphite" style="color: var(--accent);">(Ур. 1/15)</span></div>
+        <div style="font-size: 10px; color: var(--subtext);">Большой запас энергии, x3 по боссам</div>
       </div>
-      <button id="btnHero_malphite" onclick="selectHero('malphite')">2 🔷</button>
+      <div class="hero-btn-group">
+        <button id="btnHero_malphite" onclick="selectHero('malphite')">2 🔷</button>
+        <button id="upHero_malphite" onclick="upgradeHero('malphite')" style="border-color: #00d2d3; color: #00d2d3;">+1 🔷</button>
+      </div>
     </div>
     <div class="card-item">
       <div>
-        <div style="font-weight: 700; font-size: 12px;">🍄 Грибовед Тимка</div>
-        <div style="font-size: 10px; color: var(--subtext);">Отравляет тапом: яд тикает 3 секунды</div>
+        <div style="font-weight: 700; font-size: 12px;">🍄 Грибовед Тимка <span id="heroLvl_teemo" style="color: var(--accent);">(Ур. 1/15)</span></div>
+        <div style="font-size: 10px; color: var(--subtext);">Отравляет тапом: яд наносит урон боссу</div>
       </div>
-      <button id="btnHero_teemo" onclick="selectHero('teemo')">3 🔷</button>
+      <div class="hero-btn-group">
+        <button id="btnHero_teemo" onclick="selectHero('teemo')">3 🔷</button>
+        <button id="upHero_teemo" onclick="upgradeHero('teemo')" style="border-color: #00d2d3; color: #00d2d3;">+1 🔷</button>
+      </div>
     </div>
     <div class="card-item">
       <div>
-        <div style="font-weight: 700; font-size: 12px;">🪓 Дядя Дариус</div>
-        <div style="font-size: 10px; color: var(--subtext);">+2 к тапу, казнит босса при HP &lt; 15%</div>
+        <div style="font-weight: 700; font-size: 12px;">🪓 Дядя Дариус <span id="heroLvl_darius" style="color: var(--accent);">(Ур. 1/15)</span></div>
+        <div style="font-size: 10px; color: var(--subtext);">+Урон к тапу, казнит босса при &lt;15% HP</div>
       </div>
-      <button id="btnHero_darius" onclick="selectHero('darius')">4 🔷</button>
+      <div class="hero-btn-group">
+        <button id="btnHero_darius" onclick="selectHero('darius')">4 🔷</button>
+        <button id="upHero_darius" onclick="upgradeHero('darius')" style="border-color: #00d2d3; color: #00d2d3;">+1 🔷</button>
+      </div>
     </div>
     <div class="card-item">
       <div>
-        <div style="font-weight: 700; font-size: 12px;">🦊 Лисичка Ари</div>
-        <div style="font-size: 10px; color: var(--subtext);">700 энергии, вампирит +10 энергии каждые 10 тапов</div>
+        <div style="font-weight: 700; font-size: 12px;">🦊 Лисичка Ари <span id="heroLvl_ahri" style="color: var(--accent);">(Ур. 1/15)</span></div>
+        <div style="font-size: 10px; color: var(--subtext);">Вампирит энергию каждые 10 тапов</div>
       </div>
-      <button id="btnHero_ahri" onclick="selectHero('ahri')">5 🔷</button>
+      <div class="hero-btn-group">
+        <button id="btnHero_ahri" onclick="selectHero('ahri')">5 🔷</button>
+        <button id="upHero_ahri" onclick="upgradeHero('ahri')" style="border-color: #00d2d3; color: #00d2d3;">+1 🔷</button>
+      </div>
     </div>
   </div>
 
+  <!-- Таб: Смурф -->
   <div class="tab-content" id="tab-smurf">
     <div class="card-item">
       <div>
@@ -722,6 +817,56 @@
     </div>
   </div>
 
+  <!-- Таб: Донат -->
+  <div class="tab-content" id="tab-donate">
+    <div class="donate-header">🗝️ Наборы Ключей</div>
+    <div class="card-item">
+      <div>
+        <div style="font-weight: 700; font-size: 12px;">🗝️ Набор Новичка (+1 Ключ)</div>
+        <div style="font-size: 10px; color: var(--subtext);">Быстрый старт на смурф или реген</div>
+      </div>
+      <button onclick="buyWithStars('keys', 1, 25)" style="border-color: #ffd32a; color: #ffd32a;">25 ⭐️</button>
+    </div>
+    <div class="card-item">
+      <div>
+        <div style="font-weight: 700; font-size: 12px;">🗝️ Набор Смурфа (+5 Ключей)</div>
+        <div style="font-size: 10px; color: var(--subtext);">Хватит на 2 сброса и ап регена</div>
+      </div>
+      <button onclick="buyWithStars('keys', 5, 100)" style="border-color: #ffd32a; color: #ffd32a;">100 ⭐️</button>
+    </div>
+    <div class="card-item">
+      <div>
+        <div style="font-weight: 700; font-size: 12px;">🗝️ Сундук Претендента (+15 Ключей)</div>
+        <div style="font-size: 10px; color: var(--subtext);">Максимальный запас для фарма</div>
+      </div>
+      <button onclick="buyWithStars('keys', 15, 250)" style="border-color: #ffd32a; color: #ffd32a;">250 ⭐️</button>
+    </div>
+
+    <div class="donate-header" style="color: #00d2d3; margin-top: 10px;">🔷 Осколки Мастери</div>
+    <div class="card-item">
+      <div>
+        <div style="font-weight: 700; font-size: 12px;">🔷 Горсть Осколков (+2 Мастери)</div>
+        <div style="font-size: 10px; color: var(--subtext);">Хватит на гачу или трансфер героя</div>
+      </div>
+      <button onclick="buyWithStars('mastery', 2, 35)" style="border-color: #00d2d3; color: #00d2d3;">35 ⭐️</button>
+    </div>
+    <div class="card-item">
+      <div>
+        <div style="font-weight: 700; font-size: 12px;">🔷 Мешок Мастери (+6 Осколков)</div>
+        <div style="font-size: 10px; color: var(--subtext);">Открытие Тимки или Дариуса + уровень</div>
+      </div>
+      <button onclick="buyWithStars('mastery', 6, 95)" style="border-color: #00d2d3; color: #00d2d3;">95 ⭐️</button>
+    </div>
+    <div class="card-item">
+      <div>
+        <div style="font-weight: 700; font-size: 12px;">🔷 Хранилище Мастери (+15 Осколков)</div>
+        <div style="font-size: 10px; color: var(--subtext);">Фулл-прокачка любимого чемпиона</div>
+      </div>
+      <button onclick="buyWithStars('mastery', 15, 220)" style="border-color: #00d2d3; color: #00d2d3;">220 ⭐️</button>
+    </div>
+  </div>
+
+  <!-- Токсичный чат -->
   <div class="chat-bar">
     <div class="chat-msg" id="chatMsg"><b>Лесник:</b> Ясик, хватит фидить на миду!</div>
     <button class="mute-btn" id="muteBtn">Замутить 🔇</button>
@@ -759,7 +904,8 @@
       win: () => { [440, 554, 659, 880].forEach((f, i) => setTimeout(() => playTone(f, 'square', 0.15, 0.1), i * 100)); },
       mute: () => playTone(200, 'sine', 0.2, 0.15),
       claim: () => { [523, 659, 784, 1046].forEach((f, i) => setTimeout(() => playTone(f, 'triangle', 0.18, 0.15), i * 90)); },
-      ban: () => { playTone(120, 'sawtooth', 0.4, 0.3); }
+      ban: () => { playTone(120, 'sawtooth', 0.4, 0.3); },
+      gacha: () => { [300, 450, 600, 750, 950, 1200].forEach((f, i) => setTimeout(() => playTone(f, 'triangle', 0.12, 0.2), i * 70)); }
     };
 
     document.getElementById('soundToggle').addEventListener('click', () => {
@@ -789,17 +935,18 @@
     const RANKS = RANKS_DATA.map(r => r.name);
     const RUNE_COOLDOWN_SEC = 300;
     const SMURF_KEY_COST = 2;
+    const GACHA_MASTERY_COST = 4; // Стоимость сундука в осколках
 
     const HEROES_CONFIG = {
-      yasuo: { name: "Ясик 0/10", avatar: "🌪️🤡", cost: 2, maxEnergy: 500 },
-      blitz: { name: "Кот-Хукер", avatar: "🐱🤖", cost: 2, maxEnergy: 500 },
-      malphite: { name: "Мальфит-Скала", avatar: "🗿🪨", cost: 2, maxEnergy: 1500 },
-      teemo: { name: "Грибовед Тимка", avatar: "🍄😈", cost: 3, maxEnergy: 400 },
-      darius: { name: "Дядя Дариус", avatar: "🪓🩸", cost: 4, maxEnergy: 600 },
-      ahri: { name: "Лисичка Ари", avatar: "🦊✨", cost: 5, maxEnergy: 700 }
+      yasuo: { name: "Ясик 0/10", avatar: "🌪️🤡", cost: 2, baseEnergy: 500, rarity: "🟢 Обычный (50%)", weight: 25 },
+      blitz: { name: "Кот-Хукер", avatar: "🐱🤖", cost: 2, baseEnergy: 500, rarity: "🟢 Обычный (50%)", weight: 25 },
+      malphite: { name: "Мальфит-Скала", avatar: "🗿🪨", cost: 2, baseEnergy: 1500, rarity: "🔵 Редкий (30%)", weight: 15 },
+      teemo: { name: "Грибовед Тимка", avatar: "🍄😈", cost: 3, baseEnergy: 400, rarity: "🔵 Редкий (30%)", weight: 15 },
+      darius: { name: "Дядя Дариус", avatar: "🪓🩸", cost: 4, baseEnergy: 600, rarity: "🟣 Эпический (15%)", weight: 15 },
+      ahri: { name: "Лисичка Ари", avatar: "🦊✨", cost: 5, baseEnergy: 700, rarity: "🟡 Легендарный (5%)", weight: 5 }
     };
 
-    let state = JSON.parse(localStorage.getItem('clown_league_anti_cheat_v1')) || {
+    let state = JSON.parse(localStorage.getItem('clown_league_upgrades_v2')) || {
       score: 0,
       clickPower: 1,
       passivePower: 0,
@@ -814,7 +961,10 @@
       selectedRune: "electrocute",
       lastRuneChangeTime: 0,
       dailyStreak: 0,
-      lastDailyDate: ""
+      lastDailyDate: "",
+      energyIntervalSec: 30,
+      heroLevels: { yasuo: 1, blitz: 1, malphite: 1, teemo: 1, darius: 1, ahri: 1 },
+      cheatStrikes: 0
     };
 
     let comboCount = 0;
@@ -826,9 +976,8 @@
     let focusBuffActive = false;
     let dragonBuffActive = false;
 
-    // === АНТИЧИТ СИСТЕМА (VANGUARD) ===
     let clickTimestamps = [];
-    let clickCoords = [];
+    let clickHistory = [];
     let isBanned = false;
     let banTimer = null;
 
@@ -858,6 +1007,7 @@
     const energyTextEl = document.getElementById('energyText');
     const energyMaxTextEl = document.getElementById('energyMaxText');
     const energyFillEl = document.getElementById('energyFill');
+    const energySpeedLabel = document.getElementById('energySpeedLabel');
 
     const bossBox = document.getElementById('bossBox');
     const bossTimerEl = document.getElementById('bossTimer');
@@ -868,6 +1018,8 @@
     const cardBuyPassive = document.getElementById('cardBuyPassive');
     const buyClickBtn = document.getElementById('buyClickBtn');
     const buyPassiveBtn = document.getElementById('buyPassiveBtn');
+    const buyEnergyRegenBtn = document.getElementById('buyEnergyRegenBtn');
+    const energyUpgradeDesc = document.getElementById('energyUpgradeDesc');
 
     const runeElecBtn = document.getElementById('runeElecBtn');
     const runeCookieBtn = document.getElementById('runeCookieBtn');
@@ -875,9 +1027,10 @@
 
     const prestigeBtn = document.getElementById('prestigeBtn');
     const smurfDesc = document.getElementById('smurfDesc');
+    const gachaMasteryBtn = document.getElementById('gachaMasteryBtn');
 
     function saveGame() {
-      localStorage.setItem('clown_league_anti_cheat_v1', JSON.stringify(state));
+      localStorage.setItem('clown_league_upgrades_v2', JSON.stringify(state));
     }
 
     function openModal(id) {
@@ -958,76 +1111,107 @@
     function triggerAntiCheatBan(reason) {
       if (isBanned) return;
       isBanned = true;
+
+      state.cheatStrikes = (state.cheatStrikes || 0) + 1;
+
+      const penaltyPercent = Math.min(0.8, 0.15 * state.cheatStrikes);
+      const minPenalty = 20 * state.cheatStrikes;
+      const lpLost = Math.max(minPenalty, Math.floor(state.score * penaltyPercent));
+      state.score = Math.max(0, state.score - lpLost);
+
+      let banDuration = 15 * state.cheatStrikes;
+      let secondsLeft = banDuration;
+
       Sound.ban();
       triggerShake();
+      saveGame();
+      updateUI();
 
       tapBtn.classList.add('banned');
       avatarEl.textContent = "🛑🔨";
-      charNameEl.textContent = "VANGUARD БАН!";
       comboBadge.classList.remove('active');
       comboCount = 0;
       comboMultiplier = 1;
 
-      createFloatingText(window.innerWidth / 2 - 80, window.innerHeight / 2 - 50, "ОБНАРУЖЕН АВТОКЛИКЕР!", "#ff4757");
+      createFloatingText(
+        window.innerWidth / 2 - 80,
+        window.innerHeight / 2 - 60,
+        `ШТРАФ -${lpLost} LP!`,
+        "#ff4757"
+      );
 
-      let secondsLeft = 12;
-      charNameEl.textContent = `БАН: ${secondsLeft}с (${reason})`;
+      charNameEl.textContent = `СТРАЙК ${state.cheatStrikes}: ${secondsLeft}с (${reason})`;
 
       banTimer = setInterval(() => {
         secondsLeft--;
         if (secondsLeft > 0) {
-          charNameEl.textContent = `БАН: ${secondsLeft}с (${reason})`;
+          charNameEl.textContent = `СТРАЙК ${state.cheatStrikes}: ${secondsLeft}с (${reason})`;
         } else {
           clearInterval(banTimer);
           isBanned = false;
           tapBtn.classList.remove('banned');
           applyHeroStats(state.selectedHero);
           clickTimestamps = [];
-          clickCoords = [];
+          clickHistory = [];
         }
       }, 1000);
     }
 
     function detectAutoClicker(e, now) {
-      // 1. Проверка на программное событие
       if (e.isTrusted === false) {
         triggerAntiCheatBan("Script");
         return true;
       }
 
-      // 2. Ограничение скорости (CPS > 14 кликов за секунду физически невозможно долго держать пальцем)
+      if (e.pointerType === 'touch' && e.width > 0 && e.width <= 1.5 && e.height <= 1.5) {
+        triggerAntiCheatBan("Virtual Touch");
+        return true;
+      }
+
+      const currentX = Math.round(e.clientX || 0);
+      const currentY = Math.round(e.clientY || 0);
+
       clickTimestamps.push(now);
       clickTimestamps = clickTimestamps.filter(t => now - t <= 1000);
-      if (clickTimestamps.length > 14) {
+      if (clickTimestamps.length > 13) {
         triggerAntiCheatBan("CPS Limit");
         return true;
       }
 
-      // 3. Анализ повторяемости координат (Pixel-Perfect детекция)
-      // Кликер попадает ровно в 1 точку. Живой палец постоянно имеет дрейф в 2-5 пикселей.
-      const currentX = Math.round(e.clientX || 0);
-      const currentY = Math.round(e.clientY || 0);
-      clickCoords.push({ x: currentX, y: currentY });
-      if (clickCoords.length > 7) {
-        clickCoords.shift();
-        const allSame = clickCoords.every(c => Math.abs(c.x - currentX) < 1 && Math.abs(c.y - currentY) < 1);
-        if (allSame) {
-          triggerAntiCheatBan("Same Pixel");
-          return true;
-        }
-      }
+      clickHistory.push({ x: currentX, y: currentY, time: now });
+      if (clickHistory.length > 12) clickHistory.shift();
 
-      // 4. Анализ идеального интервала (как 300мс на твоём видео)
-      if (clickTimestamps.length >= 6) {
-        const intervals = [];
-        for (let i = 1; i < clickTimestamps.length; i++) {
-          intervals.push(clickTimestamps[i] - clickTimestamps[i-1]);
+      if (clickHistory.length >= 10) {
+        const clusters = [];
+        clickHistory.forEach(pt => {
+          let found = clusters.find(c => Math.hypot(c.x - pt.x, c.y - pt.y) <= 2.5);
+          if (found) {
+            found.count++;
+          } else {
+            clusters.push({ x: pt.x, y: pt.y, count: 1 });
+          }
+        });
+
+        if (clusters.length >= 1 && clusters.length <= 3) {
+          const isClustered = clusters.every(c => c.count >= 2);
+          if (isClustered) {
+            triggerAntiCheatBan("Multi-Target Bot");
+            return true;
+          }
         }
-        const avg = intervals.reduce((a, b) => a + b, 0) / intervals.length;
-        // Если все интервалы с точностью до 4 миллисекунд равны среднему — это 100% бот
-        const isRobotPacing = intervals.every(diff => Math.abs(diff - avg) < 4);
-        if (isRobotPacing && avg < 350) {
-          triggerAntiCheatBan("Robot Pace");
+
+        const intervals = [];
+        for (let i = 1; i < clickHistory.length; i++) {
+          intervals.push(clickHistory[i].time - clickHistory[i - 1].time);
+        }
+        let perfectPacingMatches = 0;
+        for (let i = 2; i < intervals.length; i += 2) {
+          if (Math.abs(intervals[i] - intervals[i - 2]) <= 3) {
+            perfectPacingMatches++;
+          }
+        }
+        if (perfectPacingMatches >= 3) {
+          triggerAntiCheatBan("Pattern Timing");
           return true;
         }
       }
@@ -1117,9 +1301,10 @@
 
     function applyHeroStats(heroKey) {
       const cfg = HEROES_CONFIG[heroKey] || HEROES_CONFIG.yasuo;
+      const lvl = state.heroLevels[heroKey] || 1;
       avatarEl.textContent = cfg.avatar;
-      charNameEl.textContent = cfg.name;
-      state.maxEnergy = cfg.maxEnergy;
+      charNameEl.textContent = `${cfg.name} (Ур.${lvl})`;
+      state.maxEnergy = cfg.baseEnergy + (lvl - 1) * 50;
     }
 
     function selectHero(heroKey) {
@@ -1130,7 +1315,7 @@
       if (!cfg) return;
 
       if (state.masteryShards < cfg.cost) {
-        alert(`❌ Не хватает осколков! Нужно ${cfg.cost} 🔷 Осколков Мастери (добываются в Смурфинге).`);
+        alert(`❌ Не хватает осколков! Нужно ${cfg.cost} 🔷 Осколков Мастери.`);
         return;
       }
 
@@ -1142,23 +1327,139 @@
       saveGame();
       Sound.win();
       updateUI();
-      alert(`💎 Трансфер оформлен! Списано ${cfg.cost} 🔷. Выбран: ${charNameEl.textContent}.`);
+      alert(`💎 Выбран: ${charNameEl.textContent}.`);
+    }
+
+    function upgradeHero(heroKey) {
+      const currentLvl = state.heroLevels[heroKey] || 1;
+      if (currentLvl >= 15) {
+        alert("⭐ Достигнут максимальный 15-й уровень персонажа!");
+        return;
+      }
+
+      const upCost = currentLvl;
+
+      if (state.masteryShards < upCost) {
+        alert(`❌ Не хватает осколков! Для улучшения до Ур.${currentLvl + 1} требуется ${upCost} 🔷.`);
+        return;
+      }
+
+      state.masteryShards -= upCost;
+      state.heroLevels[heroKey] = currentLvl + 1;
+
+      if (state.selectedHero === heroKey) {
+        applyHeroStats(heroKey);
+      }
+
+      Sound.claim();
+      saveGame();
+      updateUI();
+      alert(`⭐ ${HEROES_CONFIG[heroKey].name} улучшен до Ур. ${currentLvl + 1}! Бонусы усилены.`);
+    }
+
+    function upgradeEnergyRegen() {
+      if (state.energyIntervalSec <= 10) {
+        alert("⚡ Достигнута максимальная скорость регенерации (1 энергия в 10 секунд)!");
+        return;
+      }
+      if (state.keys < 1) {
+        alert("❌ Не хватает ключей! Требуется 1 🗝️ Ключ.");
+        return;
+      }
+
+      state.keys -= 1;
+      state.energyIntervalSec = Math.max(10, state.energyIntervalSec - 3);
+
+      Sound.claim();
+      saveGame();
+      updateUI();
+      alert(`⚡ Скорость регена ускорена! Теперь: +1 энергия раз в ${state.energyIntervalSec}с.`);
+    }
+
+    // === ХЕКСТЕК-ГАЧА ЗА 🔷 ОСКОЛКИ С КАПОМ В 15 УРОВНЕЙ ===
+    function pullGachaMastery() {
+      if (state.masteryShards < GACHA_MASTERY_COST) {
+        alert(`❌ Недостаточно осколков! Для открытия Хекстек-Сундука требуется ${GACHA_MASTERY_COST} 🔷 Осколка Мастери.`);
+        return;
+      }
+
+      state.masteryShards -= GACHA_MASTERY_COST;
+
+      const rand = Math.random() * 100;
+      let cumulative = 0;
+      let chosenKey = 'yasuo';
+
+      for (const [key, cfg] of Object.entries(HEROES_CONFIG)) {
+        cumulative += cfg.weight;
+        if (rand <= cumulative) {
+          chosenKey = key;
+          break;
+        }
+      }
+
+      const hero = HEROES_CONFIG[chosenKey];
+      const currentLvl = state.heroLevels[chosenKey] || 1;
+
+      let rewardText = "";
+      if (currentLvl >= 15) {
+        state.masteryShards += 5;
+        rewardText = `У героя <b>${hero.name}</b> уже максимальный уровень (15/15)! Компенсация: <b>+5 🔷 Осколков Мастери</b>.`;
+      } else {
+        state.heroLevels[chosenKey] = currentLvl + 1;
+        rewardText = `Чемпион <b>${hero.name}</b> получает <b>+1 Уровень бесплатно</b>!<br>Текущий уровень: <b>Ур. ${state.heroLevels[chosenKey]} / 15</b>.`;
+      }
+      
+      if (state.selectedHero === chosenKey) {
+        applyHeroStats(chosenKey);
+      }
+
+      Sound.gacha();
+      spawnConfettiExplosion();
+      triggerShake();
+      saveGame();
+      updateUI();
+
+      document.getElementById('gachaResIcon').textContent = hero.avatar;
+      document.getElementById('gachaResTitle').textContent = hero.name;
+      document.getElementById('gachaResRarity').textContent = hero.rarity;
+      document.getElementById('gachaResDesc').innerHTML = `🎉 Сундук успешно открыт!<br>${rewardText}`;
+      openModal('gachaResultModal');
     }
 
     function updateHeroButtons() {
       Object.keys(HEROES_CONFIG).forEach(key => {
         const btn = document.getElementById(`btnHero_${key}`);
-        if (!btn) return;
+        const upBtn = document.getElementById(`upHero_${key}`);
+        const lvlEl = document.getElementById(`heroLvl_${key}`);
         const cfg = HEROES_CONFIG[key];
+        const lvl = state.heroLevels[key] || 1;
 
-        if (state.selectedHero === key) {
-          btn.textContent = "Выбран ✓";
-          btn.disabled = true;
-        } else {
-          btn.textContent = `${cfg.cost} 🔷`;
-          btn.disabled = state.masteryShards < cfg.cost;
+        if (lvlEl) lvlEl.textContent = `(Ур. ${lvl}/15)`;
+
+        if (btn) {
+          if (state.selectedHero === key) {
+            btn.textContent = "Выбран ✓";
+            btn.disabled = true;
+          } else {
+            btn.textContent = `${cfg.cost} 🔷`;
+            btn.disabled = state.masteryShards < cfg.cost;
+          }
+        }
+
+        if (upBtn) {
+          if (lvl >= 15) {
+            upBtn.textContent = "МАКС";
+            upBtn.disabled = true;
+          } else {
+            upBtn.textContent = `+${lvl} 🔷`;
+            upBtn.disabled = state.masteryShards < lvl;
+          }
         }
       });
+
+      if (gachaMasteryBtn) {
+        gachaMasteryBtn.disabled = state.masteryShards < GACHA_MASTERY_COST;
+      }
     }
 
     function updateSmurfStatus() {
@@ -1202,9 +1503,20 @@
       updateRuneButtons();
       updateSmurfStatus();
 
+      energySpeedLabel.textContent = `⚡ Энергия (+1 / ${state.energyIntervalSec}с)`;
       energyTextEl.textContent = Math.floor(state.energy);
       energyMaxTextEl.textContent = state.maxEnergy;
       energyFillEl.style.width = `${(state.energy / state.maxEnergy) * 100}%`;
+
+      if (state.energyIntervalSec <= 10) {
+        buyEnergyRegenBtn.textContent = "МАКС (10с)";
+        buyEnergyRegenBtn.disabled = true;
+        energyUpgradeDesc.textContent = "Достигнут максимальный предел ускорения!";
+      } else {
+        buyEnergyRegenBtn.textContent = "1 🗝️";
+        buyEnergyRegenBtn.disabled = state.keys < 1;
+        energyUpgradeDesc.textContent = `Текущий интервал: ${state.energyIntervalSec}с (-3с до предела в 10с)`;
+      }
 
       buyClickBtn.textContent = `${state.costClick} LP`;
       buyPassiveBtn.textContent = `${state.costPassive} LP`;
@@ -1250,15 +1562,50 @@
 
     rankEl.addEventListener('click', openRanksModal);
 
+    function buyWithStars(type, amount, starsPrice) {
+      if (!tg || !tg.openInvoice) {
+        alert(`⭐️ Оплата ${starsPrice} Stars доступна внутри Telegram!`);
+        return;
+      }
+
+      const itemName = type === 'keys' ? 'Ключей 🗝️' : 'Осколков Мастери 🔷';
+
+      fetch(`/api/create-star-invoice?type=${type}&amount=${amount}&stars=${starsPrice}&userId=${tg.initDataUnsafe?.user?.id}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.invoiceLink) {
+            tg.openInvoice(data.invoiceLink, (status) => {
+              if (status === 'paid') {
+                if (type === 'keys') {
+                  state.keys += amount;
+                } else if (type === 'mastery') {
+                  state.masteryShards += amount;
+                }
+                Sound.win();
+                spawnConfettiExplosion();
+                saveGame();
+                updateUI();
+                alert(`🎉 Успешно! Получено +${amount} ${itemName}!`);
+              } else if (status === 'cancelled') {
+                alert("Оплата отменена.");
+              } else if (status === 'failed') {
+                alert("Ошибка проведения платежа Stars.");
+              }
+            });
+          } else {
+            alert("⚠️ Бэкенд платежей еще не подключен.");
+          }
+        })
+        .catch(err => {
+          alert(`⭐️ Запрос инвойса Stars (${starsPrice} ⭐️ за +${amount} ${itemName}). Подключите эндпоинт бота.`);
+        });
+    }
+
     tapBtn.addEventListener('pointerdown', (e) => {
       if (isBanned) return;
 
       const now = Date.now();
-
-      // Проверка античитом
-      if (detectAutoClicker(e, now)) {
-        return;
-      }
+      if (detectAutoClicker(e, now)) return;
 
       const rect = tapBtn.getBoundingClientRect();
       const spawnX = e.clientX || (rect.left + rect.width / 2);
@@ -1277,19 +1624,16 @@
       lastTapTime = now;
       totalHeroTaps++;
 
-      if (comboMultiplier > 1) {
-        comboBadge.textContent = `x${comboMultiplier} COMBO!`;
-        comboBadge.classList.add('active');
-      } else {
-        comboBadge.classList.remove('active');
-      }
+      const heroLvl = state.heroLevels[state.selectedHero] || 1;
 
       if (state.selectedHero === 'ahri' && totalHeroTaps % 10 === 0) {
-        state.energy = Math.min(state.maxEnergy, state.energy + 10);
-        createFloatingText(spawnX, spawnY - 35, "+10 ⚡ Вампиризм!", "#00d2d3");
+        const stealAmount = 10 + (heroLvl - 1) * 2;
+        state.energy = Math.min(state.maxEnergy, state.energy + stealAmount);
+        createFloatingText(spawnX, spawnY - 35, `+${stealAmount} ⚡ Вампиризм!`, "#00d2d3");
       }
 
-      let dariusBonus = (state.selectedHero === 'darius') ? 2 : 0;
+      let dariusBonus = (state.selectedHero === 'darius') ? (2 + heroLvl - 1) : 0;
+      let yasuoBonus = (state.selectedHero === 'yasuo') ? (heroLvl - 1) : 0;
 
       let runeMultiplier = 1;
       if (state.selectedRune === 'electrocute' && rapidTapsCount >= 3) {
@@ -1305,9 +1649,9 @@
         runeMultiplier = 3;
       }
 
-      let heroBossMult = (bossMode && state.selectedHero === 'malphite') ? 3 : 1;
+      let heroBossMult = (bossMode && state.selectedHero === 'malphite') ? (3 + (heroLvl - 1) * 0.5) : 1;
       let dragonMult = dragonBuffActive ? 1.5 : 1;
-      let totalHit = Math.floor((state.clickPower + dariusBonus) * comboMultiplier * runeMultiplier * heroBossMult * dragonMult);
+      let totalHit = Math.floor((state.clickPower + dariusBonus + yasuoBonus) * comboMultiplier * runeMultiplier * heroBossMult * dragonMult);
 
       spawnParticles(spawnX, spawnY);
 
@@ -1315,7 +1659,7 @@
         bossCurrentHp -= totalHit;
 
         if (state.selectedHero === 'teemo') {
-          poisonActive = 3;
+          poisonActive = 3 + (heroLvl - 1);
         }
 
         if (state.selectedHero === 'darius' && (bossCurrentHp / bossMaxHp) < 0.15 && bossCurrentHp > 0) {
@@ -1367,7 +1711,8 @@
         bossTimerEl.textContent = bossTimeLeft;
 
         if (poisonActive > 0 && bossCurrentHp > 0) {
-          let poisonDmg = Math.max(2, Math.floor(state.clickPower * 1.5));
+          const teemoLvl = state.heroLevels.teemo || 1;
+          let poisonDmg = Math.max(2, Math.floor(state.clickPower * (1.5 + teemoLvl * 0.3)));
           bossCurrentHp -= poisonDmg;
           poisonActive--;
           createFloatingText(180, 80, `🍄 -${poisonDmg} Яд`, "#2ed573");
@@ -1396,9 +1741,9 @@
         triggerShake();
         alert(`🏆 ПОБЕДА! Ты повысил дивизион до: ${RANKS[state.rankIndex]}! Получен +1 Ключ 🗝️!`);
       } else {
-        const rollbackTarget = RANKS_DATA[state.rankIndex].reqLp;
-        state.score = Math.floor(rollbackTarget * 0.6);
-        alert(`💀 ТИЛЬТ! Время вышло, босс не побеждён! Откат до 60% LP.`);
+        const penalty = Math.max(15, Math.floor(state.score * 0.35));
+        state.score = Math.max(0, state.score - penalty);
+        alert(`💀 ТИЛЬТ! Время вышло, босс не побеждён! Потеряно -${penalty} LP.`);
       }
       saveGame();
       updateUI();
@@ -1438,7 +1783,8 @@
 
     setInterval(() => {
       if (state.selectedHero === 'blitz' && !bossMode) {
-        let hookLp = 25 * (state.rankIndex + 1);
+        const blitzLvl = state.heroLevels.blitz || 1;
+        let hookLp = (25 + blitzLvl * 10) * (state.rankIndex + 1);
         state.score += hookLp;
         createFloatingText(150, 100, `🎣 ХУК! +${hookLp} LP!`, "#2ed573");
         Sound.crit();
@@ -1576,7 +1922,7 @@
         return;
       }
       if (state.keys < SMURF_KEY_COST) {
-        alert(`❌ Не хватает ключей! Покупка смурф-аккаунта стоит ${SMURF_KEY_COST} 🗝️ (побеждай боссов или забирай дейлики).`);
+        alert(`❌ Не хватает ключей! Покупка смурф-аккаунта стоит ${SMURF_KEY_COST} 🗝️.`);
         return;
       }
 
@@ -1593,7 +1939,7 @@
         spawnConfettiExplosion();
         saveGame();
         updateUI();
-        alert(`🎉 Смурф-аккаунт куплен! Списано ${SMURF_KEY_COST} 🗝️. Получено +${reward} 🔷 Осколков Мастери!`);
+        alert(`🎉 Смурф-аккаунт куплен! Списано ${SMURF_KEY_COST} 🗝️. Получено +${reward} 🔷 Осколков!`);
       }
     });
 
@@ -1603,7 +1949,7 @@
         if (effPassive > 0) state.score += effPassive;
 
         if (state.energy < state.maxEnergy) {
-          state.energy = Math.min(state.maxEnergy, state.energy + 1);
+          state.energy = Math.min(state.maxEnergy, state.energy + (1 / state.energyIntervalSec));
         }
 
         const currentTarget = RANKS_DATA[state.rankIndex].reqLp;
