@@ -172,6 +172,14 @@
     }
     @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.05); } }
 
+    /* Банхаммер оверлей на кнопку */
+    .character-btn.banned {
+      border-color: var(--danger) !important;
+      background: #1e0508 !important;
+      pointer-events: none;
+      filter: grayscale(0.8);
+    }
+
     .character-hat { position: absolute; top: -16px; font-size: 30px; z-index: 5; }
     .character-avatar { font-size: 50px; }
     .character-name { font-size: 11px; font-weight: bold; color: var(--subtext); margin-top: 2px; }
@@ -380,11 +388,7 @@
       letter-spacing: 0.3px;
     }
 
-    .modal-subtitle {
-      font-size: 11px;
-      color: #8395a7;
-      margin-top: 3px;
-    }
+    .modal-subtitle { font-size: 11px; color: #8395a7; margin-top: 3px; }
 
     .modal-btn {
       width: 100%;
@@ -515,6 +519,13 @@
       <div class="modal-subtitle">Как не застрять на Дне Палаты:</div>
 
       <div class="guide-section">
+        <div class="guide-title">🛡️ Античит Vanguard</div>
+        <div class="guide-text">
+          Использование скриптов и сторонних кликеров карается <b>блокировкой клика на 12 секунд</b>! Играйте пальцами честно.
+        </div>
+      </div>
+
+      <div class="guide-section">
         <div class="guide-title">⚡ Медленная Энергия</div>
         <div class="guide-text">
           Каждый клик тратит <b>2 энергии</b>. Регенерация замедлена: всего <b>+1 энергии/сек</b>. Берегите клики перед боссами или берите руну «Печенька»!
@@ -538,12 +549,12 @@
       <div class="guide-section">
         <div class="guide-title">🦸 Чемпионы за 🔷 Осколки</div>
         <div class="guide-text">
-          • <b>Ясик 0/10:</b> классический комбо-кликер.<br>
-          • <b>Кот-Хукер:</b> ворует кучу LP каждые 20 сек.<br>
-          • <b>Мальфит:</b> 1500 энергии и x3 урон по промо-боссам.<br>
+          • <b>Ясик:</b> быстрые комбо-серии.<br>
+          • <b>Кот-Хукер:</b> ворует LP каждые 20 сек.<br>
+          • <b>Мальфит:</b> 1500 энергии и <b>x3 урон по боссам</b>.<br>
           • <b>Грибовед Тимка:</b> отравляет босса и цель ядом.<br>
-          • <b>Дядя Дариус:</b> казнит босса, если его HP &lt; 15%.<br>
-          • <b>Лисичка Ари:</b> вампиризм энергии (+10 каждые 10 тапов).
+          • <b>Дядя Дариус:</b> казнит босса при HP &lt; 15%.<br>
+          • <b>Лисичка Ари:</b> восстанавливает +10 энергии каждые 10 тапов.
         </div>
       </div>
 
@@ -681,7 +692,7 @@
     <div class="card-item">
       <div>
         <div style="font-weight: 700; font-size: 12px;">🍄 Грибовед Тимка</div>
-        <div style="font-size: 10px; color: var(--subtext);">Отравляет тапом: +100% урона ядом на 3с</div>
+        <div style="font-size: 10px; color: var(--subtext);">Отравляет тапом: яд тикает 3 секунды</div>
       </div>
       <button id="btnHero_teemo" onclick="selectHero('teemo')">3 🔷</button>
     </div>
@@ -747,7 +758,8 @@
       crit: () => { playTone(540, 'triangle', 0.08, 0.15); setTimeout(() => playTone(900, 'triangle', 0.12, 0.2), 40); },
       win: () => { [440, 554, 659, 880].forEach((f, i) => setTimeout(() => playTone(f, 'square', 0.15, 0.1), i * 100)); },
       mute: () => playTone(200, 'sine', 0.2, 0.15),
-      claim: () => { [523, 659, 784, 1046].forEach((f, i) => setTimeout(() => playTone(f, 'triangle', 0.18, 0.15), i * 90)); }
+      claim: () => { [523, 659, 784, 1046].forEach((f, i) => setTimeout(() => playTone(f, 'triangle', 0.18, 0.15), i * 90)); },
+      ban: () => { playTone(120, 'sawtooth', 0.4, 0.3); }
     };
 
     document.getElementById('soundToggle').addEventListener('click', () => {
@@ -778,7 +790,6 @@
     const RUNE_COOLDOWN_SEC = 300;
     const SMURF_KEY_COST = 2;
 
-    // Конфиг чемпионов
     const HEROES_CONFIG = {
       yasuo: { name: "Ясик 0/10", avatar: "🌪️🤡", cost: 2, maxEnergy: 500 },
       blitz: { name: "Кот-Хукер", avatar: "🐱🤖", cost: 2, maxEnergy: 500 },
@@ -788,7 +799,7 @@
       ahri: { name: "Лисичка Ари", avatar: "🦊✨", cost: 5, maxEnergy: 700 }
     };
 
-    let state = JSON.parse(localStorage.getItem('clown_league_heroes_v1')) || {
+    let state = JSON.parse(localStorage.getItem('clown_league_anti_cheat_v1')) || {
       score: 0,
       clickPower: 1,
       passivePower: 0,
@@ -811,9 +822,15 @@
     let lastTapTime = 0;
     let rapidTapsCount = 0;
     let totalHeroTaps = 0;
-    let poisonActive = 0; // счетчик яда Тимо
+    let poisonActive = 0;
     let focusBuffActive = false;
     let dragonBuffActive = false;
+
+    // === АНТИЧИТ СИСТЕМА (VANGUARD) ===
+    let clickTimestamps = [];
+    let clickCoords = [];
+    let isBanned = false;
+    let banTimer = null;
 
     let bossMode = false;
     let bossMaxHp = 100;
@@ -860,7 +877,7 @@
     const smurfDesc = document.getElementById('smurfDesc');
 
     function saveGame() {
-      localStorage.setItem('clown_league_heroes_v1', JSON.stringify(state));
+      localStorage.setItem('clown_league_anti_cheat_v1', JSON.stringify(state));
     }
 
     function openModal(id) {
@@ -936,6 +953,86 @@
       el.style.top = `${y}px`;
       document.body.appendChild(el);
       setTimeout(() => el.remove(), 700);
+    }
+
+    function triggerAntiCheatBan(reason) {
+      if (isBanned) return;
+      isBanned = true;
+      Sound.ban();
+      triggerShake();
+
+      tapBtn.classList.add('banned');
+      avatarEl.textContent = "🛑🔨";
+      charNameEl.textContent = "VANGUARD БАН!";
+      comboBadge.classList.remove('active');
+      comboCount = 0;
+      comboMultiplier = 1;
+
+      createFloatingText(window.innerWidth / 2 - 80, window.innerHeight / 2 - 50, "ОБНАРУЖЕН АВТОКЛИКЕР!", "#ff4757");
+
+      let secondsLeft = 12;
+      charNameEl.textContent = `БАН: ${secondsLeft}с (${reason})`;
+
+      banTimer = setInterval(() => {
+        secondsLeft--;
+        if (secondsLeft > 0) {
+          charNameEl.textContent = `БАН: ${secondsLeft}с (${reason})`;
+        } else {
+          clearInterval(banTimer);
+          isBanned = false;
+          tapBtn.classList.remove('banned');
+          applyHeroStats(state.selectedHero);
+          clickTimestamps = [];
+          clickCoords = [];
+        }
+      }, 1000);
+    }
+
+    function detectAutoClicker(e, now) {
+      // 1. Проверка на программное событие
+      if (e.isTrusted === false) {
+        triggerAntiCheatBan("Script");
+        return true;
+      }
+
+      // 2. Ограничение скорости (CPS > 14 кликов за секунду физически невозможно долго держать пальцем)
+      clickTimestamps.push(now);
+      clickTimestamps = clickTimestamps.filter(t => now - t <= 1000);
+      if (clickTimestamps.length > 14) {
+        triggerAntiCheatBan("CPS Limit");
+        return true;
+      }
+
+      // 3. Анализ повторяемости координат (Pixel-Perfect детекция)
+      // Кликер попадает ровно в 1 точку. Живой палец постоянно имеет дрейф в 2-5 пикселей.
+      const currentX = Math.round(e.clientX || 0);
+      const currentY = Math.round(e.clientY || 0);
+      clickCoords.push({ x: currentX, y: currentY });
+      if (clickCoords.length > 7) {
+        clickCoords.shift();
+        const allSame = clickCoords.every(c => Math.abs(c.x - currentX) < 1 && Math.abs(c.y - currentY) < 1);
+        if (allSame) {
+          triggerAntiCheatBan("Same Pixel");
+          return true;
+        }
+      }
+
+      // 4. Анализ идеального интервала (как 300мс на твоём видео)
+      if (clickTimestamps.length >= 6) {
+        const intervals = [];
+        for (let i = 1; i < clickTimestamps.length; i++) {
+          intervals.push(clickTimestamps[i] - clickTimestamps[i-1]);
+        }
+        const avg = intervals.reduce((a, b) => a + b, 0) / intervals.length;
+        // Если все интервалы с точностью до 4 миллисекунд равны среднему — это 100% бот
+        const isRobotPacing = intervals.every(diff => Math.abs(diff - avg) < 4);
+        if (isRobotPacing && avg < 350) {
+          triggerAntiCheatBan("Robot Pace");
+          return true;
+        }
+      }
+
+      return false;
     }
 
     function updateRankAtmosphere() {
@@ -1154,7 +1251,15 @@
     rankEl.addEventListener('click', openRanksModal);
 
     tapBtn.addEventListener('pointerdown', (e) => {
+      if (isBanned) return;
+
       const now = Date.now();
+
+      // Проверка античитом
+      if (detectAutoClicker(e, now)) {
+        return;
+      }
+
       const rect = tapBtn.getBoundingClientRect();
       const spawnX = e.clientX || (rect.left + rect.width / 2);
       const spawnY = (e.clientY || rect.top) - 15;
@@ -1179,13 +1284,11 @@
         comboBadge.classList.remove('active');
       }
 
-      // Пассивка Ари: восстанавливает +10 энергии каждые 10 тапов
       if (state.selectedHero === 'ahri' && totalHeroTaps % 10 === 0) {
         state.energy = Math.min(state.maxEnergy, state.energy + 10);
         createFloatingText(spawnX, spawnY - 35, "+10 ⚡ Вампиризм!", "#00d2d3");
       }
 
-      // Пассивка Дариуса: +2 к базовому урону
       let dariusBonus = (state.selectedHero === 'darius') ? 2 : 0;
 
       let runeMultiplier = 1;
@@ -1211,12 +1314,10 @@
       if (bossMode) {
         bossCurrentHp -= totalHit;
 
-        // Пассивка Тимо: накладывает яд на 3 секунды
         if (state.selectedHero === 'teemo') {
           poisonActive = 3;
         }
 
-        // Казнь Дариуса: мгновенное добивание, если у босса < 15% HP
         if (state.selectedHero === 'darius' && (bossCurrentHp / bossMaxHp) < 0.15 && bossCurrentHp > 0) {
           bossCurrentHp = 0;
           triggerShake();
@@ -1265,7 +1366,6 @@
         bossTimeLeft--;
         bossTimerEl.textContent = bossTimeLeft;
 
-        // Тик яда Тимо
         if (poisonActive > 0 && bossCurrentHp > 0) {
           let poisonDmg = Math.max(2, Math.floor(state.clickPower * 1.5));
           bossCurrentHp -= poisonDmg;
