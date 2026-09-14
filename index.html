@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Лига Клоунов</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     :root {
       --bg: #0b0f17;
@@ -611,7 +612,7 @@
     </div>
   </div>
 
-  <!-- Окно Помощи (Гайд) -->
+  <!-- Окно Помощи (Гайд с 3 вкладками) -->
   <div class="modal-overlay" id="helpModal">
     <div class="modal-card">
       <button class="close-corner-btn" onclick="closeModal('helpModal')">✕</button>
@@ -624,6 +625,7 @@
         <button class="guide-tab-btn" onclick="switchGuideTab(2)">3. Донат</button>
       </div>
 
+      <!-- Вкладка 1 -->
       <div class="guide-pane active" id="guidePane0">
         <div class="guide-section">
           <div class="guide-title">⚡ Энергия и Сессии</div>
@@ -663,6 +665,7 @@
         </div>
       </div>
 
+      <!-- Вкладка 2 -->
       <div class="guide-pane" id="guidePane1">
         <div class="guide-section">
           <div class="guide-title">🪙 LP (League Points)</div>
@@ -694,6 +697,7 @@
         </div>
       </div>
 
+      <!-- Вкладка 3 -->
       <div class="guide-pane" id="guidePane2">
         <div class="guide-section">
           <div class="guide-title">⭐️ Telegram Stars (Звёзды)</div>
@@ -1057,7 +1061,7 @@
       ahri: { name: "Лисичка Ари", avatar: "🦊✨", cost: 5, baseEnergy: 700, rarity: "🟡 Легендарный (5%)", weight: 5 }
     };
 
-    let state = JSON.parse(localStorage.getItem('clown_league_upgrades_v12')) || {
+    let state = JSON.parse(localStorage.getItem('clown_league_upgrades_v13')) || {
       score: 0,
       clickPower: 1,
       passivePower: 0,
@@ -1141,7 +1145,7 @@
     const gachaMasteryBtn = document.getElementById('gachaMasteryBtn');
 
     function saveGame() {
-      localStorage.setItem('clown_league_upgrades_v12', JSON.stringify(state));
+      localStorage.setItem('clown_league_upgrades_v13', JSON.stringify(state));
     }
 
     function openModal(id) {
@@ -1679,16 +1683,23 @@
 
     rankEl.addEventListener('click', openRanksModal);
 
-    // Полноценная интеграция оплаты Telegram Stars через бэкенд
+    // Функция покупки с умным авто-определением: на локалке — тест, в Telegram — настоящий инвойс через бэкенд
     function buyWithStars(type, amount, starsPrice) {
       if (!tg || !tg.openInvoice) {
-        alert("⭐️ Оплата звёздами доступна только внутри Telegram!");
+        if (confirm(`[ТЕСТ ОПЛАТЫ НА ЛОКАЛКЕ] Купить +${amount} ${type === 'keys' ? '🗝️ Ключей' : '🔷 Осколков'} за ${starsPrice} ⭐️?`)) {
+          if (type === 'keys') state.keys += amount;
+          else if (type === 'mastery') state.masteryShards += amount;
+          Sound.win();
+          spawnConfettiExplosion();
+          saveGame();
+          updateUI();
+          alert(`🎉 Успешно (тест)! Получено +${amount} ${type === 'keys' ? '🗝️' : '🔷'}!`);
+        }
         return;
       }
 
       const itemName = type === 'keys' ? `${amount} Ключей 🗝️` : `${amount} Осколков Мастери 🔷`;
 
-      // Заменяем URL на адрес вашего рабочего бэкенда, который генерирует инвойс через createInvoiceLink
       fetch(`https://your-bot-backend.com/api/create-star-invoice?type=${type}&amount=${amount}&stars=${starsPrice}&userId=${tg.initDataUnsafe?.user?.id || 0}`)
         .then(res => res.json())
         .then(data => {
@@ -1716,7 +1727,7 @@
           }
         })
         .catch(err => {
-          alert("⚠️ Ошибка связи с сервером платежей Telegram Stars.");
+          alert("⚠️ Ошибка подключения к серверу платежей Telegram Stars.");
         });
     }
 
