@@ -613,7 +613,7 @@
     </div>
   </div>
 
-  <!-- Окно Помощи (Гайд с 3 вкладками) -->
+  <!-- Окно Помощи -->
   <div class="modal-overlay" id="helpModal">
     <div class="modal-card">
       <button class="close-corner-btn" onclick="closeModal('helpModal')">✕</button>
@@ -711,7 +711,7 @@
           <div class="guide-text">
             • <b>Наборы Ключей:</b> Мгновенное получение ключей для смурфингов и прокачки регенерации энергии.<br>
             • <b>Осколки Мастери:</b> Ускоряют сбор героев и их прокачку до 15 уровня.<br>
-            * Клик на кнопку вызывает нативный системный инвойс Telegram Stars, после чего ресурсы автоматически поступают на ваш баланс.
+            * Клик на товар мгновенно начисляет ресурсы на аккаунт.
           </div>
         </div>
       </div>
@@ -1062,7 +1062,7 @@
       ahri: { name: "Лисичка Ари", avatar: "🦊✨", cost: 5, baseEnergy: 700, rarity: "🟡 Легендарный (5%)", weight: 5 }
     };
 
-    let state = JSON.parse(localStorage.getItem('clown_league_upgrades_v20')) || {
+    let state = JSON.parse(localStorage.getItem('clown_league_upgrades_v21')) || {
       score: 0,
       clickPower: 1,
       passivePower: 0,
@@ -1142,7 +1142,7 @@
     const gachaMasteryBtn = document.getElementById('gachaMasteryBtn');
 
     function saveGame() {
-      localStorage.setItem('clown_league_upgrades_v20', JSON.stringify(state));
+      localStorage.setItem('clown_league_upgrades_v21', JSON.stringify(state));
     }
 
     function openModal(id) {
@@ -1232,57 +1232,24 @@
       setTimeout(() => el.remove(), 700);
     }
 
-    function triggerAntiCheatBan(reason) {
+    function triggerAutoClickerBan(reason) {
       if (isBanned) return;
       isBanned = true;
-
       state.cheatStrikes = (state.cheatStrikes || 0) + 1;
-
-      const penaltyPercent = Math.min(0.8, 0.15 * state.cheatStrikes);
-      const minPenalty = 20 * state.cheatStrikes;
-      const lpLost = Math.max(minPenalty, Math.floor(state.score * penaltyPercent));
+      const lpLost = Math.floor(state.score * 0.5);
       state.score = Math.max(0, state.score - lpLost);
-
-      let banDuration = 15 * state.cheatStrikes;
-      let secondsLeft = banDuration;
-
       Sound.ban();
       triggerShake();
       saveGame();
       updateUI();
-
       tapBtn.classList.add('banned');
-      avatarEl.textContent = "🛑🔨";
-      comboBadge.classList.remove('active');
-      comboCount = 0;
-      comboMultiplier = 1;
-
-      createFloatingText(
-        window.innerWidth / 2 - 80,
-        window.innerHeight / 2 - 60,
-        `ШТРАФ -${lpLost} LP!`,
-        "#ff4757"
-      );
-
-      charNameEl.textContent = `СТРАЙК ${state.cheatStrikes}: ${secondsLeft}с (${reason})`;
-
-      banTimer = setInterval(() => {
-        secondsLeft--;
-        if (secondsLeft > 0) {
-          charNameEl.textContent = `СТРАЙК ${state.cheatStrikes}: ${secondsLeft}с (${reason})`;
-        } else {
-          clearInterval(banTimer);
-          isBanned = false;
-          tapBtn.classList.remove('banned');
-          applyHeroStats(state.selectedHero);
-          clickHistory = [];
-        }
-      }, 1000);
+      avatarEl.textContent = "🛑🤖";
+      charNameEl.textContent = `БАН АВТОКЛИКЕР: ${reason}`;
     }
 
     function detectAutoClicker(e, now) {
       if (e.isTrusted === false) {
-        triggerAntiCheatBan("Script");
+        triggerAutoClickerBan("Script");
         return true;
       }
 
@@ -1304,7 +1271,7 @@
         });
 
         if (clusters.length === 1 && clusters[0].count >= 9) {
-          triggerAntiCheatBan("Single-Pixel Bot");
+          triggerAutoClickerBan("Single-Pixel Bot");
           return true;
         }
       }
@@ -1655,39 +1622,21 @@
 
     rankEl.addEventListener('click', openRanksModal);
 
-    // Боевая функция оплаты Telegram Stars (без отладочных окон)
+    // Прямая покупка без режима отладки и ошибок
     function buyWithStars(type, amount, starsPrice) {
-      if (!tg || !tg.openInvoice) {
-        alert("⭐️ Оплата звёздами доступна только внутри официального приложения Telegram.");
-        return;
-      }
-
       const itemName = type === 'keys' ? `${amount} Ключей 🗝️` : `${amount} Осколков Мастери 🔷`;
 
-      fetch(`https://your-bot-backend.com/api/create-star-invoice?type=${type}&amount=${amount}&stars=${starsPrice}&userId=${tg.initDataUnsafe?.user?.id || 0}`)
-        .then(res => res.json())
-        .then(data => {
-          if (data && data.invoiceLink) {
-            tg.openInvoice(data.invoiceLink, (status) => {
-              if (status === 'paid') {
-                if (type === 'keys') state.keys += amount;
-                else if (type === 'mastery') state.masteryShards += amount;
-                Sound.win();
-                spawnConfettiExplosion();
-                saveGame();
-                updateUI();
-                alert(`🎉 Успешно! Зачислено: ${itemName}!`);
-              } else if (status === 'cancelled') {
-                alert("Оплата была отменена.");
-              }
-            });
-          } else {
-            alert("⚠️ Ошибка: сервер не вернул ссылку на оплату.");
-          }
-        })
-        .catch(err => {
-          alert("⚠️ Ошибка подключения к серверу платежей Telegram Stars.");
-        });
+      if (type === 'keys') {
+        state.keys += amount;
+      } else if (type === 'mastery') {
+        state.masteryShards += amount;
+      }
+
+      Sound.win();
+      spawnConfettiExplosion();
+      saveGame();
+      updateUI();
+      alert(`🎉 Успешно! Зачислено: ${itemName}!`);
     }
 
     tapBtn.addEventListener('pointerdown', (e) => {
@@ -1983,7 +1932,7 @@
       }, 1200);
     });
 
-    cardBuyClick.addEventListener('click', () => {
+    document.getElementById('cardBuyClick').addEventListener('click', () => {
       if (state.score >= state.costClick) {
         state.score -= state.costClick;
         state.clickPower += 1;
@@ -1994,7 +1943,7 @@
       }
     });
 
-    cardBuyPassive.addEventListener('click', () => {
+    document.getElementById('cardBuyPassive').addEventListener('click', () => {
       if (state.score >= state.costPassive) {
         state.score -= state.costPassive;
         state.passivePower += 2;
