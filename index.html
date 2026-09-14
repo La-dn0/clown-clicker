@@ -274,6 +274,7 @@
       margin: 4px 0 2px 2px;
     }
 
+    /* Теперь карточки кликабельны на всю область */
     .card-item {
       background: var(--card);
       border: 1px solid #2f3542;
@@ -287,7 +288,6 @@
       transition: background 0.1s, border-color 0.1s;
     }
     .card-item:active { background: #1b2537; border-color: var(--accent); }
-    .card-item.clickable-card * { pointer-events: none; }
     .card-item.disabled { opacity: 0.4; cursor: not-allowed; pointer-events: none; }
     .card-item button {
       background: #202b3c;
@@ -300,12 +300,14 @@
       cursor: pointer;
       min-width: 75px;
       text-align: center;
+      pointer-events: none; /* Клик идет на всю карточку */
     }
-    .card-item button:disabled { opacity: 0.4; cursor: not-allowed; border-color: #555; color: #777; }
+    .card-item button:disabled { border-color: #555; color: #777; }
 
     .hero-btn-group {
       display: flex;
       gap: 4px;
+      pointer-events: none;
     }
     .hero-btn-group button {
       min-width: 50px;
@@ -625,7 +627,6 @@
         <button class="guide-tab-btn" onclick="switchGuideTab(2)">3. Донат</button>
       </div>
 
-      <!-- Вкладка 1 -->
       <div class="guide-pane active" id="guidePane0">
         <div class="guide-section">
           <div class="guide-title">⚡ Энергия и Сессии</div>
@@ -665,7 +666,6 @@
         </div>
       </div>
 
-      <!-- Вкладка 2 -->
       <div class="guide-pane" id="guidePane1">
         <div class="guide-section">
           <div class="guide-title">🪙 LP (League Points)</div>
@@ -697,7 +697,6 @@
         </div>
       </div>
 
-      <!-- Вкладка 3 -->
       <div class="guide-pane" id="guidePane2">
         <div class="guide-section">
           <div class="guide-title">⭐️ Telegram Stars (Звёзды)</div>
@@ -792,51 +791,51 @@
 
   <!-- Таб: Лавка -->
   <div class="tab-content active" id="tab-shop">
-    <div class="card-item clickable-card" id="cardBuyClick">
+    <div class="card-item" id="cardBuyClick">
       <div>
         <div style="font-weight: 700; font-size: 12px;">Картонная Катана</div>
         <div style="font-size: 10px; color: var(--subtext);">+1 к клику</div>
       </div>
       <button id="buyClickBtn">15 LP</button>
     </div>
-    <div class="card-item clickable-card" id="cardBuyPassive">
+    <div class="card-item" id="cardBuyPassive">
       <div>
         <div style="font-weight: 700; font-size: 12px;">Песель на стеках</div>
         <div style="font-size: 10px; color: var(--subtext);">+2 LP/сек пассивно</div>
       </div>
       <button id="buyPassiveBtn">50 LP</button>
     </div>
-    <div class="card-item" id="cardEnergyUpgrade">
+    <div class="card-item" id="cardEnergyUpgrade" onclick="upgradeEnergyRegen()">
       <div>
         <div style="font-weight: 700; font-size: 12px;">⚡ Энерго-Ускоритель</div>
         <div style="font-size: 10px; color: var(--subtext);" id="energyUpgradeDesc">-3 сек к перезарядке энергии (макс до 10с)</div>
       </div>
-      <button id="buyEnergyRegenBtn" onclick="upgradeEnergyRegen()">1 🗝️</button>
+      <button id="buyEnergyRegenBtn">1 🗝️</button>
     </div>
   </div>
 
   <!-- Таб: Руны -->
   <div class="tab-content" id="tab-runes">
-    <div class="card-item">
+    <div class="card-item" onclick="selectRune('electrocute')">
       <div>
         <div style="font-weight: 700; font-size: 12px;">⚡ Казнь током</div>
         <div style="font-size: 10px; color: var(--subtext);">Каждый 3-й быстрый тап бьет x3</div>
       </div>
-      <button id="runeElecBtn" onclick="selectRune('electrocute')">75 LP</button>
+      <button id="runeElecBtn">75 LP</button>
     </div>
-    <div class="card-item">
+    <div class="card-item" onclick="selectRune('cookie')">
       <div>
         <div style="font-weight: 700; font-size: 12px;">🍪 Печенька из кармана</div>
         <div style="font-size: 10px; color: var(--subtext);">+150 энергии раз в 60 сек</div>
       </div>
-      <button id="runeCookieBtn" onclick="selectRune('cookie')">75 LP</button>
+      <button id="runeCookieBtn">75 LP</button>
     </div>
-    <div class="card-item">
+    <div class="card-item" onclick="selectRune('harvest')">
       <div>
         <div style="font-weight: 700; font-size: 12px;">💀 Темная Жатва</div>
         <div style="font-size: 10px; color: var(--subtext);">Урон x3 по боссу, если HP &lt; 35%</div>
       </div>
-      <button id="runeHarvestBtn" onclick="selectRune('harvest')">75 LP</button>
+      <button id="runeHarvestBtn">75 LP</button>
     </div>
   </div>
 
@@ -854,7 +853,7 @@
     </div>
 
     <div class="card-item">
-      <div>
+      <div style="flex: 1;" onclick="selectHero('yasuo')">
         <div style="font-weight: 700; font-size: 12px;">🌪️ Ясик 0/10 <span id="heroLvl_yasuo" style="color: var(--accent);">(Ур. 1/15)</span></div>
         <div style="font-size: 10px; color: var(--subtext);">Быстрое комбо тапа (+урон за уровень)</div>
       </div>
@@ -864,7 +863,7 @@
       </div>
     </div>
     <div class="card-item">
-      <div>
+      <div style="flex: 1;" onclick="selectHero('blitz')">
         <div style="font-weight: 700; font-size: 12px;">🐱 Кот-Хукер <span id="heroLvl_blitz" style="color: var(--accent);">(Ур. 1/15)</span></div>
         <div style="font-size: 10px; color: var(--subtext);">Авто-хук ворует LP каждые 20 сек</div>
       </div>
@@ -874,7 +873,7 @@
       </div>
     </div>
     <div class="card-item">
-      <div>
+      <div style="flex: 1;" onclick="selectHero('malphite')">
         <div style="font-weight: 700; font-size: 12px;">🗿 Мальфит-Скала <span id="heroLvl_malphite" style="color: var(--accent);">(Ур. 1/15)</span></div>
         <div style="font-size: 10px; color: var(--subtext);">Большой запас энергии, x3 по боссам</div>
       </div>
@@ -884,7 +883,7 @@
       </div>
     </div>
     <div class="card-item">
-      <div>
+      <div style="flex: 1;" onclick="selectHero('teemo')">
         <div style="font-weight: 700; font-size: 12px;">🍄 Грибовед Тимка <span id="heroLvl_teemo" style="color: var(--accent);">(Ур. 1/15)</span></div>
         <div style="font-size: 10px; color: var(--subtext);">Отравляет тапом: яд наносит урон боссу</div>
       </div>
@@ -894,7 +893,7 @@
       </div>
     </div>
     <div class="card-item">
-      <div>
+      <div style="flex: 1;" onclick="selectHero('darius')">
         <div style="font-weight: 700; font-size: 12px;">🪓 Дядя Дариус <span id="heroLvl_darius" style="color: var(--accent);">(Ур. 1/15)</span></div>
         <div style="font-size: 10px; color: var(--subtext);">+Урон к тапу, казнит босса при &lt;15% HP</div>
       </div>
@@ -904,7 +903,7 @@
       </div>
     </div>
     <div class="card-item">
-      <div>
+      <div style="flex: 1;" onclick="selectHero('ahri')">
         <div style="font-weight: 700; font-size: 12px;">🦊 Лисичка Ари <span id="heroLvl_ahri" style="color: var(--accent);">(Ур. 1/15)</span></div>
         <div style="font-size: 10px; color: var(--subtext);">Вампирит энергию каждые 10 тапов</div>
       </div>
@@ -917,7 +916,7 @@
 
   <!-- Таб: Смурф -->
   <div class="tab-content" id="tab-smurf">
-    <div class="card-item">
+    <div class="card-item" id="prestigeCard">
       <div>
         <div style="font-weight: 700; font-size: 12px;">🔄 Купить Смурф-акк</div>
         <div style="font-size: 10px; color: var(--subtext);" id="smurfDesc">Сброс ранга и LP в обмен на Осколки Мастери</div>
@@ -929,49 +928,49 @@
   <!-- Таб: Донат -->
   <div class="tab-content" id="tab-donate">
     <div class="donate-header">🗝️ Наборы Ключей</div>
-    <div class="card-item">
+    <div class="card-item" onclick="buyWithStars('keys', 1, 25)">
       <div>
         <div style="font-weight: 700; font-size: 12px;">🗝️ Набор Новичка (+1 Ключ)</div>
         <div style="font-size: 10px; color: var(--subtext);">Быстрый старт на смурф или реген</div>
       </div>
-      <button onclick="buyWithStars('keys', 1, 25)" style="border-color: #ffd32a; color: #ffd32a;">25 ⭐️</button>
+      <button style="border-color: #ffd32a; color: #ffd32a;">25 ⭐️</button>
     </div>
-    <div class="card-item">
+    <div class="card-item" onclick="buyWithStars('keys', 5, 100)">
       <div>
         <div style="font-weight: 700; font-size: 12px;">🗝️ Набор Смурфа (+5 Ключей)</div>
         <div style="font-size: 10px; color: var(--subtext);">Хватит на 2 сброса и ап регена</div>
       </div>
-      <button onclick="buyWithStars('keys', 5, 100)" style="border-color: #ffd32a; color: #ffd32a;">100 ⭐️</button>
+      <button style="border-color: #ffd32a; color: #ffd32a;">100 ⭐️</button>
     </div>
-    <div class="card-item">
+    <div class="card-item" onclick="buyWithStars('keys', 15, 250)">
       <div>
         <div style="font-weight: 700; font-size: 12px;">🗝️ Сундук Претендента (+15 Ключей)</div>
         <div style="font-size: 10px; color: var(--subtext);">Максимальный запас для фарма</div>
       </div>
-      <button onclick="buyWithStars('keys', 15, 250)" style="border-color: #ffd32a; color: #ffd32a;">250 ⭐️</button>
+      <button style="border-color: #ffd32a; color: #ffd32a;">250 ⭐️</button>
     </div>
 
     <div class="donate-header" style="color: #00d2d3; margin-top: 10px;">🔷 Осколки Мастери</div>
-    <div class="card-item">
+    <div class="card-item" onclick="buyWithStars('mastery', 2, 35)">
       <div>
         <div style="font-weight: 700; font-size: 12px;">🔷 Горсть Осколков (+2 Мастери)</div>
         <div style="font-size: 10px; color: var(--subtext);">Хватит на гачу или трансфер героя</div>
       </div>
-      <button onclick="buyWithStars('mastery', 2, 35)" style="border-color: #00d2d3; color: #00d2d3;">35 ⭐️</button>
+      <button style="border-color: #00d2d3; color: #00d2d3;">35 ⭐️</button>
     </div>
-    <div class="card-item">
+    <div class="card-item" onclick="buyWithStars('mastery', 6, 95)">
       <div>
         <div style="font-weight: 700; font-size: 12px;">🔷 Мешок Мастери (+6 Осколков)</div>
         <div style="font-size: 10px; color: var(--subtext);">Открытие Тимки или Дариуса + уровень</div>
       </div>
-      <button onclick="buyWithStars('mastery', 6, 95)" style="border-color: #00d2d3; color: #00d2d3;">95 ⭐️</button>
+      <button style="border-color: #00d2d3; color: #00d2d3;">95 ⭐️</button>
     </div>
-    <div class="card-item">
+    <div class="card-item" onclick="buyWithStars('mastery', 15, 220)">
       <div>
         <div style="font-weight: 700; font-size: 12px;">🔷 Хранилище Мастери (+15 Осколков)</div>
         <div style="font-size: 10px; color: var(--subtext);">Фулл-прокачка любимого чемпиона</div>
       </div>
-      <button onclick="buyWithStars('mastery', 15, 220)" style="border-color: #00d2d3; color: #00d2d3;">220 ⭐️</button>
+      <button style="border-color: #00d2d3; color: #00d2d3;">220 ⭐️</button>
     </div>
   </div>
 
@@ -1061,7 +1060,7 @@
       ahri: { name: "Лисичка Ари", avatar: "🦊✨", cost: 5, baseEnergy: 700, rarity: "🟡 Легендарный (5%)", weight: 5 }
     };
 
-    let state = JSON.parse(localStorage.getItem('clown_league_upgrades_v14')) || {
+    let state = JSON.parse(localStorage.getItem('clown_league_upgrades_v15')) || {
       score: 0,
       clickPower: 1,
       passivePower: 0,
@@ -1140,12 +1139,13 @@
     const runeCookieBtn = document.getElementById('runeCookieBtn');
     const runeHarvestBtn = document.getElementById('runeHarvestBtn');
 
+    const prestigeCard = document.getElementById('prestigeCard');
     const prestigeBtn = document.getElementById('prestigeBtn');
     const smurfDesc = document.getElementById('smurfDesc');
     const gachaMasteryBtn = document.getElementById('gachaMasteryBtn');
 
     function saveGame() {
-      localStorage.setItem('clown_league_upgrades_v14', JSON.stringify(state));
+      localStorage.setItem('clown_league_upgrades_v15', JSON.stringify(state));
     }
 
     function openModal(id) {
@@ -1683,7 +1683,7 @@
 
     rankEl.addEventListener('click', openRanksModal);
 
-    // Умная функция оплаты с гибридным режимом (настоящий Telegram Stars через бэкенд + фоллбек для отладки)
+    // Функция покупки звезд с фоллбеком для теста
     function buyWithStars(type, amount, starsPrice) {
       if (!tg || !tg.openInvoice) {
         if (confirm(`[ТЕСТ ОПЛАТЫ НА ЛОКАЛКЕ] Купить +${amount} ${type === 'keys' ? '🗝️ Ключей' : '🔷 Осколков'} за ${starsPrice} ⭐️?`)) {
@@ -2010,6 +2010,7 @@
       }
 
       state.lastDailyDate = today;
+      // Увеличиваем стрик и зацикливаем на 7 днях
       state.dailyStreak = (state.dailyStreak + 1) % 7;
       saveGame();
 
@@ -2049,7 +2050,7 @@
       }
     });
 
-    prestigeBtn.addEventListener('click', () => {
+    prestigeCard.addEventListener('click', () => {
       if (state.rankIndex < 3) {
         alert("Нужен хотя бы ранг Дерево I для смурфинга!");
         return;
