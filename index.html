@@ -427,7 +427,6 @@
     .modal-btn:active { transform: scale(0.97); box-shadow: 0 2px 8px rgba(245, 166, 35, 0.2); }
     .modal-btn:disabled { background: #222c3c; color: #576574; box-shadow: none; cursor: not-allowed; }
 
-    /* Улучшенная круглая кнопка закрытия */
     .close-corner-btn {
       position: absolute;
       top: 12px;
@@ -1058,7 +1057,7 @@
       ahri: { name: "Лисичка Ари", avatar: "🦊✨", cost: 5, baseEnergy: 700, rarity: "🟡 Легендарный (5%)", weight: 5 }
     };
 
-    let state = JSON.parse(localStorage.getItem('clown_league_upgrades_v11')) || {
+    let state = JSON.parse(localStorage.getItem('clown_league_upgrades_v12')) || {
       score: 0,
       clickPower: 1,
       passivePower: 0,
@@ -1142,7 +1141,7 @@
     const gachaMasteryBtn = document.getElementById('gachaMasteryBtn');
 
     function saveGame() {
-      localStorage.setItem('clown_league_upgrades_v11', JSON.stringify(state));
+      localStorage.setItem('clown_league_upgrades_v12', JSON.stringify(state));
     }
 
     function openModal(id) {
@@ -1157,7 +1156,6 @@
       setTimeout(() => { modal.style.display = 'none'; }, 250);
     }
 
-    // Восстановленная функция переключения вкладок гайда (теперь точно в глобальной области видимости)
     function switchGuideTab(index) {
       const panes = document.querySelectorAll('.guide-pane');
       const buttons = document.querySelectorAll('.guide-tab-btn');
@@ -1681,23 +1679,16 @@
 
     rankEl.addEventListener('click', openRanksModal);
 
-    // Умная функция оплаты: поддержка локального тест-режима на localhost и боевых Stars в Telegram
+    // Полноценная интеграция оплаты Telegram Stars через бэкенд
     function buyWithStars(type, amount, starsPrice) {
       if (!tg || !tg.openInvoice) {
-        if (confirm(`[ТЕСТ ОПЛАТЫ НА ЛОКАЛКЕ] Купить +${amount} ${type === 'keys' ? '🗝️ Ключей' : '🔷 Осколков'} за ${starsPrice} ⭐️?`)) {
-          if (type === 'keys') state.keys += amount;
-          else if (type === 'mastery') state.masteryShards += amount;
-          Sound.win();
-          spawnConfettiExplosion();
-          saveGame();
-          updateUI();
-          alert(`🎉 Успешно (тест)! Получено +${amount} ${type === 'keys' ? '🗝️' : '🔷'}!`);
-        }
+        alert("⭐️ Оплата звёздами доступна только внутри Telegram!");
         return;
       }
 
       const itemName = type === 'keys' ? `${amount} Ключей 🗝️` : `${amount} Осколков Мастери 🔷`;
 
+      // Заменяем URL на адрес вашего рабочего бэкенда, который генерирует инвойс через createInvoiceLink
       fetch(`https://your-bot-backend.com/api/create-star-invoice?type=${type}&amount=${amount}&stars=${starsPrice}&userId=${tg.initDataUnsafe?.user?.id || 0}`)
         .then(res => res.json())
         .then(data => {
@@ -1721,11 +1712,11 @@
               }
             });
           } else {
-            alert("⚠️ Сервер не смог создать платежную ссылку.");
+            alert("⚠️ Сервер не смог создать платежную ссылку. Проверьте бэкенд.");
           }
         })
         .catch(err => {
-          alert("⚠️ Ошибка подключения к серверу платежей Telegram Stars.");
+          alert("⚠️ Ошибка связи с сервером платежей Telegram Stars.");
         });
     }
 
