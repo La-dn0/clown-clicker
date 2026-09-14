@@ -626,7 +626,6 @@
         <button class="guide-tab-btn" onclick="switchGuideTab(2)">3. Донат</button>
       </div>
 
-      <!-- Вкладка 1 -->
       <div class="guide-pane active" id="guidePane0">
         <div class="guide-section">
           <div class="guide-title">⚡ Энергия и Сессии</div>
@@ -649,7 +648,7 @@
         <div class="guide-section">
           <div class="guide-title">🛡️ Античит Vanguard</div>
           <div class="guide-text">
-            Использование автокликеров, бьющих строго в одну точку (один пиксель), строго запрещено. Мультитач (игра в несколько пальцев) разрешен и не банит!
+            Использование автокликеров, бьющих строго в одну точку (один пиксель), строго запрещено. Мультитач (игра в несколько пальцев) полностью разрешен!
           </div>
         </div>
         <div class="guide-section">
@@ -666,7 +665,6 @@
         </div>
       </div>
 
-      <!-- Вкладка 2 -->
       <div class="guide-pane" id="guidePane1">
         <div class="guide-section">
           <div class="guide-title">🪙 LP (League Points)</div>
@@ -698,20 +696,18 @@
         </div>
       </div>
 
-      <!-- Вкладка 3 -->
       <div class="guide-pane" id="guidePane2">
         <div class="guide-section">
           <div class="guide-title">⭐️ Telegram Stars (Звёзды)</div>
           <div class="guide-text">
-            Официальная цифровая валюта Telegram для безопасных и мгновенных микроплатежей внутри мини-приложений.
+            Официальная цифровая валюта Telegram для безопасных платежей внутри экосистемы.
           </div>
         </div>
         <div class="guide-section">
           <div class="guide-title">🛒 Ассортимент вкладки «Донат»:</div>
           <div class="guide-text">
             • <b>Наборы Ключей:</b> Мгновенное получение ключей для смурфингов и прокачки регенерации энергии.<br>
-            • <b>Осколки Мастери:</b> Ускоряют сбор героев и их прокачку до 15 уровня.<br>
-            * Клик на товар мгновенно начисляет ресурсы на аккаунт.
+            • <b>Осколки Мастери:</b> Ускоряют сбор героев и их прокачку до 15 уровня.
           </div>
         </div>
       </div>
@@ -1062,7 +1058,10 @@
       ahri: { name: "Лисичка Ари", avatar: "🦊✨", cost: 5, baseEnergy: 700, rarity: "🟡 Легендарный (5%)", weight: 5 }
     };
 
-    let state = JSON.parse(localStorage.getItem('clown_league_upgrades_v21')) || {
+    // ФИКСАЦИЯ КЛЮЧА ХРАНИЛИЩА (ДАННЫЕ БОЛЬШЕ НЕ СБРАСЫВАЮТСЯ)
+    const STORAGE_KEY = 'clown_league_save_prod';
+
+    let defaultState = {
       score: 0,
       clickPower: 1,
       passivePower: 0,
@@ -1082,6 +1081,8 @@
       heroLevels: { yasuo: 1, blitz: 1, malphite: 1, teemo: 1, darius: 1, ahri: 1 },
       cheatStrikes: 0
     };
+
+    let state = Object.assign({}, defaultState, JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'));
 
     let comboCount = 0;
     let comboMultiplier = 1;
@@ -1142,7 +1143,7 @@
     const gachaMasteryBtn = document.getElementById('gachaMasteryBtn');
 
     function saveGame() {
-      localStorage.setItem('clown_league_upgrades_v21', JSON.stringify(state));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     }
 
     function openModal(id) {
@@ -1232,24 +1233,57 @@
       setTimeout(() => el.remove(), 700);
     }
 
-    function triggerAutoClickerBan(reason) {
+    function triggerAntiCheatBan(reason) {
       if (isBanned) return;
       isBanned = true;
+
       state.cheatStrikes = (state.cheatStrikes || 0) + 1;
-      const lpLost = Math.floor(state.score * 0.5);
+
+      const penaltyPercent = Math.min(0.8, 0.15 * state.cheatStrikes);
+      const minPenalty = 20 * state.cheatStrikes;
+      const lpLost = Math.max(minPenalty, Math.floor(state.score * penaltyPercent));
       state.score = Math.max(0, state.score - lpLost);
+
+      let banDuration = 15 * state.cheatStrikes;
+      let secondsLeft = banDuration;
+
       Sound.ban();
       triggerShake();
       saveGame();
       updateUI();
+
       tapBtn.classList.add('banned');
-      avatarEl.textContent = "🛑🤖";
-      charNameEl.textContent = `БАН АВТОКЛИКЕР: ${reason}`;
+      avatarEl.textContent = "🛑🔨";
+      comboBadge.classList.remove('active');
+      comboCount = 0;
+      comboMultiplier = 1;
+
+      createFloatingText(
+        window.innerWidth / 2 - 80,
+        window.innerHeight / 2 - 60,
+        `ШТРАФ -${lpLost} LP!`,
+        "#ff4757"
+      );
+
+      charNameEl.textContent = `СТРАЙК ${state.cheatStrikes}: ${secondsLeft}с (${reason})`;
+
+      banTimer = setInterval(() => {
+        secondsLeft--;
+        if (secondsLeft > 0) {
+          charNameEl.textContent = `СТРАЙК ${state.cheatStrikes}: ${secondsLeft}с (${reason})`;
+        } else {
+          clearInterval(banTimer);
+          isBanned = false;
+          tapBtn.classList.remove('banned');
+          applyHeroStats(state.selectedHero);
+          clickHistory = [];
+        }
+      }, 1000);
     }
 
     function detectAutoClicker(e, now) {
       if (e.isTrusted === false) {
-        triggerAutoClickerBan("Script");
+        triggerAntiCheatBan("Script");
         return true;
       }
 
@@ -1271,7 +1305,7 @@
         });
 
         if (clusters.length === 1 && clusters[0].count >= 9) {
-          triggerAutoClickerBan("Single-Pixel Bot");
+          triggerAntiCheatBan("Single-Pixel Bot");
           return true;
         }
       }
@@ -1622,21 +1656,42 @@
 
     rankEl.addEventListener('click', openRanksModal);
 
-    // Прямая покупка без режима отладки и ошибок
+    // НАСТОЯЩАЯ ОПЛАТА ЧЕРЕЗ TELEGRAM STARS
     function buyWithStars(type, amount, starsPrice) {
-      const itemName = type === 'keys' ? `${amount} Ключей 🗝️` : `${amount} Осколков Мастери 🔷`;
-
-      if (type === 'keys') {
-        state.keys += amount;
-      } else if (type === 'mastery') {
-        state.masteryShards += amount;
+      if (!tg || !tg.openInvoice) {
+        alert("⭐️ Оплата звёздами доступна только внутри официального приложения Telegram!");
+        return;
       }
 
-      Sound.win();
-      spawnConfettiExplosion();
-      saveGame();
-      updateUI();
-      alert(`🎉 Успешно! Зачислено: ${itemName}!`);
+      const itemName = type === 'keys' ? `${amount} Ключей 🗝️` : `${amount} Осколков Мастери 🔷`;
+
+      // Запрос ссылки на инвойс от бэкенда бота
+      fetch(`https://your-bot-backend.com/api/create-star-invoice?type=${type}&amount=${amount}&stars=${starsPrice}&userId=${tg.initDataUnsafe?.user?.id || 0}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.invoiceLink) {
+            tg.openInvoice(data.invoiceLink, (status) => {
+              if (status === 'paid') {
+                if (type === 'keys') state.keys += amount;
+                else if (type === 'mastery') state.masteryShards += amount;
+                Sound.win();
+                spawnConfettiExplosion();
+                saveGame();
+                updateUI();
+                alert(`🎉 Успешно! Зачислено: ${itemName}!`);
+              } else if (status === 'cancelled') {
+                alert("Оплата была отменена.");
+              } else {
+                alert("Ошибка проведения платежа Stars.");
+              }
+            });
+          } else {
+            alert("⚠️ Бэкенд платежей еще не подключен.");
+          }
+        })
+        .catch(err => {
+          alert(`⭐️ Запрос инвойса Stars (${starsPrice} ⭐️ за ${itemName}). Подключите эндпоинт бота.`);
+        });
     }
 
     tapBtn.addEventListener('pointerdown', (e) => {
@@ -1728,6 +1783,7 @@
       }
 
       if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+      saveGame();
       updateUI();
     });
 
@@ -1815,6 +1871,7 @@
       if (state.selectedRune === 'cookie') {
         state.energy = Math.min(state.maxEnergy, state.energy + 150);
         createFloatingText(160, 100, "🍪 Печенька: +150 Энергии!", "#f5a623");
+        saveGame();
         updateUI();
       }
     }, 60000);
@@ -1826,6 +1883,7 @@
         state.score += hookLp;
         createFloatingText(150, 100, `🎣 ХУК! +${hookLp} LP!`, "#2ed573");
         Sound.crit();
+        saveGame();
         updateUI();
       }
     }, 20000);
@@ -1981,6 +2039,7 @@
       }
     });
 
+    // Регулярное сохранение и пассивный доход
     setInterval(() => {
       if (!bossMode) {
         let effPassive = state.passivePower * (focusBuffActive ? 1.5 : 1);
