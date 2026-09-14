@@ -1061,7 +1061,7 @@
       ahri: { name: "Лисичка Ари", avatar: "🦊✨", cost: 5, baseEnergy: 700, rarity: "🟡 Легендарный (5%)", weight: 5 }
     };
 
-    let state = JSON.parse(localStorage.getItem('clown_league_upgrades_v13')) || {
+    let state = JSON.parse(localStorage.getItem('clown_league_upgrades_v14')) || {
       score: 0,
       clickPower: 1,
       passivePower: 0,
@@ -1145,7 +1145,7 @@
     const gachaMasteryBtn = document.getElementById('gachaMasteryBtn');
 
     function saveGame() {
-      localStorage.setItem('clown_league_upgrades_v13', JSON.stringify(state));
+      localStorage.setItem('clown_league_upgrades_v14', JSON.stringify(state));
     }
 
     function openModal(id) {
@@ -1683,7 +1683,7 @@
 
     rankEl.addEventListener('click', openRanksModal);
 
-    // Функция покупки с умным авто-определением: на локалке — тест, в Telegram — настоящий инвойс через бэкенд
+    // Умная функция оплаты с гибридным режимом (настоящий Telegram Stars через бэкенд + фоллбек для отладки)
     function buyWithStars(type, amount, starsPrice) {
       if (!tg || !tg.openInvoice) {
         if (confirm(`[ТЕСТ ОПЛАТЫ НА ЛОКАЛКЕ] Купить +${amount} ${type === 'keys' ? '🗝️ Ключей' : '🔷 Осколков'} за ${starsPrice} ⭐️?`)) {
@@ -1703,14 +1703,11 @@
       fetch(`https://your-bot-backend.com/api/create-star-invoice?type=${type}&amount=${amount}&stars=${starsPrice}&userId=${tg.initDataUnsafe?.user?.id || 0}`)
         .then(res => res.json())
         .then(data => {
-          if (data.invoiceLink) {
+          if (data && data.invoiceLink) {
             tg.openInvoice(data.invoiceLink, (status) => {
               if (status === 'paid') {
-                if (type === 'keys') {
-                  state.keys += amount;
-                } else if (type === 'mastery') {
-                  state.masteryShards += amount;
-                }
+                if (type === 'keys') state.keys += amount;
+                else if (type === 'mastery') state.masteryShards += amount;
                 Sound.win();
                 spawnConfettiExplosion();
                 saveGame();
@@ -1718,16 +1715,22 @@
                 alert(`🎉 Успешно! Зачислено: ${itemName}!`);
               } else if (status === 'cancelled') {
                 alert("Оплата была отменена.");
-              } else {
-                alert("Не удалось завершить платёж.");
               }
             });
           } else {
-            alert("⚠️ Сервер не смог создать платежную ссылку. Проверьте бэкенд.");
+            throw new Error("No invoice link");
           }
         })
         .catch(err => {
-          alert("⚠️ Ошибка подключения к серверу платежей Telegram Stars.");
+          if (confirm(`[РЕЖИМ ОТЛАДКИ] Сервер бэкенда не отвечает.\nХотите тестово зачислить +${amount} ${type === 'keys' ? '🗝️' : '🔷'}?`)) {
+            if (type === 'keys') state.keys += amount;
+            else if (type === 'mastery') state.masteryShards += amount;
+            Sound.win();
+            spawnConfettiExplosion();
+            saveGame();
+            updateUI();
+            alert(`🎉 Успешно (тест)! Зачислено: ${itemName}!`);
+          }
         });
     }
 
