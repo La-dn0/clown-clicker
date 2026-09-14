@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
@@ -1062,7 +1062,7 @@
       ahri: { name: "Лисичка Ари", avatar: "🦊✨", cost: 5, baseEnergy: 700, rarity: "🟡 Легендарный (5%)", weight: 5 }
     };
 
-    let state = JSON.parse(localStorage.getItem('clown_league_upgrades_v19')) || {
+    let state = JSON.parse(localStorage.getItem('clown_league_upgrades_v20')) || {
       score: 0,
       clickPower: 1,
       passivePower: 0,
@@ -1142,7 +1142,7 @@
     const gachaMasteryBtn = document.getElementById('gachaMasteryBtn');
 
     function saveGame() {
-      localStorage.setItem('clown_league_upgrades_v19', JSON.stringify(state));
+      localStorage.setItem('clown_league_upgrades_v20', JSON.stringify(state));
     }
 
     function openModal(id) {
@@ -1655,9 +1655,10 @@
 
     rankEl.addEventListener('click', openRanksModal);
 
+    // Боевая функция оплаты Telegram Stars (без отладочных окон)
     function buyWithStars(type, amount, starsPrice) {
       if (!tg || !tg.openInvoice) {
-        alert("⭐️ Метод openInvoice не поддерживается в текущей версии клиента Telegram.");
+        alert("⭐️ Оплата звёздами доступна только внутри официального приложения Telegram.");
         return;
       }
 
