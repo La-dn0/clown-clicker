@@ -274,7 +274,6 @@
       margin: 4px 0 2px 2px;
     }
 
-    /* Теперь карточки кликабельны на всю область */
     .card-item {
       background: var(--card);
       border: 1px solid #2f3542;
@@ -300,7 +299,7 @@
       cursor: pointer;
       min-width: 75px;
       text-align: center;
-      pointer-events: none; /* Клик идет на всю карточку */
+      pointer-events: none;
     }
     .card-item button:disabled { border-color: #555; color: #777; }
 
@@ -649,7 +648,7 @@
         <div class="guide-section">
           <div class="guide-title">🛡️ Античит Vanguard</div>
           <div class="guide-text">
-            Использование автокликеров и ботов строго запрещено. Система выдает прогрессивный бан и конфискует часть LP.
+            Использование автокликеров, бьющих строго в одну точку (один пиксель), строго запрещено. Система выдает прогрессивный бан и конфискует часть LP.
           </div>
         </div>
         <div class="guide-section">
@@ -1060,7 +1059,7 @@
       ahri: { name: "Лисичка Ари", avatar: "🦊✨", cost: 5, baseEnergy: 700, rarity: "🟡 Легендарный (5%)", weight: 5 }
     };
 
-    let state = JSON.parse(localStorage.getItem('clown_league_upgrades_v15')) || {
+    let state = JSON.parse(localStorage.getItem('clown_league_upgrades_v17')) || {
       score: 0,
       clickPower: 1,
       passivePower: 0,
@@ -1135,17 +1134,13 @@
     const buyEnergyRegenBtn = document.getElementById('buyEnergyRegenBtn');
     const energyUpgradeDesc = document.getElementById('energyUpgradeDesc');
 
-    const runeElecBtn = document.getElementById('runeElecBtn');
-    const runeCookieBtn = document.getElementById('runeCookieBtn');
-    const runeHarvestBtn = document.getElementById('runeHarvestBtn');
-
     const prestigeCard = document.getElementById('prestigeCard');
     const prestigeBtn = document.getElementById('prestigeBtn');
     const smurfDesc = document.getElementById('smurfDesc');
     const gachaMasteryBtn = document.getElementById('gachaMasteryBtn');
 
     function saveGame() {
-      localStorage.setItem('clown_league_upgrades_v15', JSON.stringify(state));
+      localStorage.setItem('clown_league_upgrades_v17', JSON.stringify(state));
     }
 
     function openModal(id) {
@@ -1284,6 +1279,7 @@
       }, 1000);
     }
 
+    // Античит проверяет ТОЛЬКО автокликер по одному пикселю (исключая ложные баны на мультитач в 4 пальца)
     function detectAutoClicker(e, now) {
       if (e.isTrusted === false) {
         triggerAntiCheatBan("Script");
@@ -1293,20 +1289,13 @@
       const currentX = Math.round(e.clientX || 0);
       const currentY = Math.round(e.clientY || 0);
 
-      clickTimestamps.push(now);
-      clickTimestamps = clickTimestamps.filter(t => now - t <= 1000);
-      if (clickTimestamps.length > 13) {
-        triggerAntiCheatBan("CPS Limit");
-        return true;
-      }
-
       clickHistory.push({ x: currentX, y: currentY, time: now });
       if (clickHistory.length > 12) clickHistory.shift();
 
       if (clickHistory.length >= 10) {
         const clusters = [];
         clickHistory.forEach(pt => {
-          let found = clusters.find(c => Math.hypot(c.x - pt.x, c.y - pt.y) <= 2.5);
+          let found = clusters.find(c => Math.hypot(c.x - pt.x, c.y - pt.y) <= 1.5);
           if (found) {
             found.count++;
           } else {
@@ -1314,31 +1303,28 @@
           }
         });
 
-        if (clusters.length >= 1 && clusters.length <= 3) {
-          const isClustered = clusters.every(c => c.count >= 2);
-          if (isClustered) {
-            triggerAntiCheatBan("Multi-Target Bot");
-            return true;
-          }
-        }
-
-        const intervals = [];
-        for (let i = 1; i < clickHistory.length; i++) {
-          intervals.push(clickHistory[i].time - clickHistory[i - 1].time);
-        }
-        let perfectPacingMatches = 0;
-        for (let i = 2; i < intervals.length; i += 2) {
-          if (Math.abs(intervals[i] - intervals[i - 2]) <= 3) {
-            perfectPacingMatches++;
-          }
-        }
-        if (perfectPacingMatches >= 3) {
-          triggerAntiCheatBan("Pattern Timing");
+        if (clusters.length === 1 && clusters[0].count >= 9) {
+          triggerAutoClickerBan("Single-Pixel Bot");
           return true;
         }
       }
 
       return false;
+    }
+
+    function triggerAutoClickerBan(reason) {
+      if (isBanned) return;
+      isBanned = true;
+      state.cheatStrikes = (state.cheatStrikes || 0) + 1;
+      const lpLost = Math.floor(state.score * 0.5);
+      state.score = Math.max(0, state.score - lpLost);
+      Sound.ban();
+      triggerShake();
+      saveGame();
+      updateUI();
+      tapBtn.classList.add('banned');
+      avatarEl.textContent = "🛑🤖";
+      charNameEl.textContent = `БАН АВТОКЛИКЕР: ${reason}`;
     }
 
     function updateRankAtmosphere() {
@@ -1400,12 +1386,13 @@
       const cost = getRuneSwitchCost();
 
       const runes = [
-        { id: 'electrocute', btn: runeElecBtn },
-        { id: 'cookie', btn: runeCookieBtn },
-        { id: 'harvest', btn: runeHarvestBtn }
+        { id: 'electrocute', btn: document.getElementById('runeElecBtn') },
+        { id: 'cookie', btn: document.getElementById('runeCookieBtn') },
+        { id: 'harvest', btn: document.getElementById('runeHarvestBtn') }
       ];
 
       runes.forEach(r => {
+        if (!r.btn) return;
         if (state.selectedRune === r.id) {
           r.btn.textContent = "Выбрана ✓";
           r.btn.disabled = true;
@@ -1683,7 +1670,6 @@
 
     rankEl.addEventListener('click', openRanksModal);
 
-    // Функция покупки звезд с фоллбеком для теста
     function buyWithStars(type, amount, starsPrice) {
       if (!tg || !tg.openInvoice) {
         if (confirm(`[ТЕСТ ОПЛАТЫ НА ЛОКАЛКЕ] Купить +${amount} ${type === 'keys' ? '🗝️ Ключей' : '🔷 Осколков'} за ${starsPrice} ⭐️?`)) {
@@ -2010,7 +1996,6 @@
       }
 
       state.lastDailyDate = today;
-      // Увеличиваем стрик и зацикливаем на 7 днях
       state.dailyStreak = (state.dailyStreak + 1) % 7;
       saveGame();
 
@@ -2028,7 +2013,7 @@
       }, 1200);
     });
 
-    cardBuyClick.addEventListener('click', () => {
+    document.getElementById('cardBuyClick').addEventListener('click', () => {
       if (state.score >= state.costClick) {
         state.score -= state.costClick;
         state.clickPower += 1;
@@ -2039,7 +2024,7 @@
       }
     });
 
-    cardBuyPassive.addEventListener('click', () => {
+    document.getElementById('cardBuyPassive').addEventListener('click', () => {
       if (state.score >= state.costPassive) {
         state.score -= state.costPassive;
         state.passivePower += 2;
