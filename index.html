@@ -364,7 +364,7 @@
       background: linear-gradient(165deg, #192333 0%, #0d131d 100%);
       border: 1px solid rgba(245, 166, 35, 0.4);
       border-radius: 20px;
-      padding: 20px 16px 16px 16px;
+      padding: 24px 16px 16px 16px;
       text-align: center;
       max-width: 350px;
       width: 100%;
@@ -426,6 +426,27 @@
     }
     .modal-btn:active { transform: scale(0.97); box-shadow: 0 2px 8px rgba(245, 166, 35, 0.2); }
     .modal-btn:disabled { background: #222c3c; color: #576574; box-shadow: none; cursor: not-allowed; }
+
+    /* Улучшенная круглая кнопка закрытия */
+    .close-corner-btn {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #a4b0be;
+      font-size: 15px;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 10;
+      transition: background 0.15s, color 0.15s;
+    }
+    .close-corner-btn:hover { background: rgba(255, 71, 87, 0.2); color: #fff; }
 
     .guide-tabs {
       display: flex;
@@ -538,20 +559,6 @@
       background: linear-gradient(135deg, rgba(245, 166, 35, 0.15) 0%, rgba(255, 71, 87, 0.15) 100%);
     }
 
-    .close-corner-btn {
-      position: absolute;
-      top: 12px;
-      right: 12px;
-      background: transparent;
-      border: none;
-      color: #576574;
-      font-size: 18px;
-      cursor: pointer;
-      line-height: 1;
-      padding: 4px;
-    }
-    .close-corner-btn:hover { color: #fff; }
-
     .guide-section {
       text-align: left;
       margin: 10px 0;
@@ -605,7 +612,7 @@
     </div>
   </div>
 
-  <!-- Окно Помощи (Гайд с 3 вкладками) -->
+  <!-- Окно Помощи (Гайд) -->
   <div class="modal-overlay" id="helpModal">
     <div class="modal-card">
       <button class="close-corner-btn" onclick="closeModal('helpModal')">✕</button>
@@ -618,7 +625,6 @@
         <button class="guide-tab-btn" onclick="switchGuideTab(2)">3. Донат</button>
       </div>
 
-      <!-- Вкладка 1 -->
       <div class="guide-pane active" id="guidePane0">
         <div class="guide-section">
           <div class="guide-title">⚡ Энергия и Сессии</div>
@@ -658,7 +664,6 @@
         </div>
       </div>
 
-      <!-- Вкладка 2 -->
       <div class="guide-pane" id="guidePane1">
         <div class="guide-section">
           <div class="guide-title">🪙 LP (League Points)</div>
@@ -690,7 +695,6 @@
         </div>
       </div>
 
-      <!-- Вкладка 3 -->
       <div class="guide-pane" id="guidePane2">
         <div class="guide-section">
           <div class="guide-title">⭐️ Telegram Stars (Звёзды)</div>
@@ -1054,7 +1058,7 @@
       ahri: { name: "Лисичка Ари", avatar: "🦊✨", cost: 5, baseEnergy: 700, rarity: "🟡 Легендарный (5%)", weight: 5 }
     };
 
-    let state = JSON.parse(localStorage.getItem('clown_league_upgrades_v10')) || {
+    let state = JSON.parse(localStorage.getItem('clown_league_upgrades_v11')) || {
       score: 0,
       clickPower: 1,
       passivePower: 0,
@@ -1138,7 +1142,7 @@
     const gachaMasteryBtn = document.getElementById('gachaMasteryBtn');
 
     function saveGame() {
-      localStorage.setItem('clown_league_upgrades_v10', JSON.stringify(state));
+      localStorage.setItem('clown_league_upgrades_v11', JSON.stringify(state));
     }
 
     function openModal(id) {
@@ -1153,7 +1157,7 @@
       setTimeout(() => { modal.style.display = 'none'; }, 250);
     }
 
-    // Восстановленная функция переключения вкладок гайда
+    // Восстановленная функция переключения вкладок гайда (теперь точно в глобальной области видимости)
     function switchGuideTab(index) {
       const panes = document.querySelectorAll('.guide-pane');
       const buttons = document.querySelectorAll('.guide-tab-btn');
@@ -1677,10 +1681,9 @@
 
     rankEl.addEventListener('click', openRanksModal);
 
-    // Умная функция оплаты: если локально (нет TG/бэкенда) — тест-режим, если в Telegram — реальный openInvoice
+    // Умная функция оплаты: поддержка локального тест-режима на localhost и боевых Stars в Telegram
     function buyWithStars(type, amount, starsPrice) {
       if (!tg || !tg.openInvoice) {
-        // Удобный тестовый режим для локальной разработки без бэкенда
         if (confirm(`[ТЕСТ ОПЛАТЫ НА ЛОКАЛКЕ] Купить +${amount} ${type === 'keys' ? '🗝️ Ключей' : '🔷 Осколков'} за ${starsPrice} ⭐️?`)) {
           if (type === 'keys') state.keys += amount;
           else if (type === 'mastery') state.masteryShards += amount;
@@ -1701,8 +1704,11 @@
           if (data.invoiceLink) {
             tg.openInvoice(data.invoiceLink, (status) => {
               if (status === 'paid') {
-                if (type === 'keys') state.keys += amount;
-                else if (type === 'mastery') state.masteryShards += amount;
+                if (type === 'keys') {
+                  state.keys += amount;
+                } else if (type === 'mastery') {
+                  state.masteryShards += amount;
+                }
                 Sound.win();
                 spawnConfettiExplosion();
                 saveGame();
