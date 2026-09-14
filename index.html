@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
@@ -1062,7 +1062,7 @@
       ahri: { name: "Лисичка Ари", avatar: "🦊✨", cost: 5, baseEnergy: 700, rarity: "🟡 Легендарный (5%)", weight: 5 }
     };
 
-    let state = JSON.parse(localStorage.getItem('clown_league_upgrades_v18')) || {
+    let state = JSON.parse(localStorage.getItem('clown_league_upgrades_v19')) || {
       score: 0,
       clickPower: 1,
       passivePower: 0,
@@ -1142,7 +1142,7 @@
     const gachaMasteryBtn = document.getElementById('gachaMasteryBtn');
 
     function saveGame() {
-      localStorage.setItem('clown_league_upgrades_v18', JSON.stringify(state));
+      localStorage.setItem('clown_league_upgrades_v19', JSON.stringify(state));
     }
 
     function openModal(id) {
@@ -1657,15 +1657,7 @@
 
     function buyWithStars(type, amount, starsPrice) {
       if (!tg || !tg.openInvoice) {
-        if (confirm(`[ТЕСТ ОПЛАТЫ НА ЛОКАЛКЕ] Купить +${amount} ${type === 'keys' ? '🗝️ Ключей' : '🔷 Осколков'} за ${starsPrice} ⭐️?`)) {
-          if (type === 'keys') state.keys += amount;
-          else if (type === 'mastery') state.masteryShards += amount;
-          Sound.win();
-          spawnConfettiExplosion();
-          saveGame();
-          updateUI();
-          alert(`🎉 Успешно (тест)! Получено +${amount} ${type === 'keys' ? '🗝️' : '🔷'}!`);
-        }
+        alert("⭐️ Метод openInvoice не поддерживается в текущей версии клиента Telegram.");
         return;
       }
 
@@ -1689,19 +1681,11 @@
               }
             });
           } else {
-            throw new Error("No invoice link");
+            alert("⚠️ Ошибка: сервер не вернул ссылку на оплату.");
           }
         })
         .catch(err => {
-          if (confirm(`[РЕЖИМ ОТЛАДКИ] Сервер бэкенда не отвечает.\nХотите тестово зачислить +${amount} ${type === 'keys' ? '🗝️' : '🔷'}?`)) {
-            if (type === 'keys') state.keys += amount;
-            else if (type === 'mastery') state.masteryShards += amount;
-            Sound.win();
-            spawnConfettiExplosion();
-            saveGame();
-            updateUI();
-            alert(`🎉 Успешно (тест)! Зачислено: ${itemName}!`);
-          }
+          alert("⚠️ Ошибка подключения к серверу платежей Telegram Stars.");
         });
     }
 
