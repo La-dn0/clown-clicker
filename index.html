@@ -626,6 +626,7 @@
         <button class="guide-tab-btn" onclick="switchGuideTab(2)">3. Донат</button>
       </div>
 
+      <!-- Вкладка 1 -->
       <div class="guide-pane active" id="guidePane0">
         <div class="guide-section">
           <div class="guide-title">⚡ Энергия и Сессии</div>
@@ -648,7 +649,7 @@
         <div class="guide-section">
           <div class="guide-title">🛡️ Античит Vanguard</div>
           <div class="guide-text">
-            Использование автокликеров, бьющих строго в одну точку (один пиксель), строго запрещено. Система выдает прогрессивный бан и конфискует часть LP.
+            Использование автокликеров, бьющих строго в одну точку (один пиксель), строго запрещено. Мультитач (игра в несколько пальцев) разрешен и не банит!
           </div>
         </div>
         <div class="guide-section">
@@ -665,6 +666,7 @@
         </div>
       </div>
 
+      <!-- Вкладка 2 -->
       <div class="guide-pane" id="guidePane1">
         <div class="guide-section">
           <div class="guide-title">🪙 LP (League Points)</div>
@@ -696,6 +698,7 @@
         </div>
       </div>
 
+      <!-- Вкладка 3 -->
       <div class="guide-pane" id="guidePane2">
         <div class="guide-section">
           <div class="guide-title">⭐️ Telegram Stars (Звёзды)</div>
@@ -1059,7 +1062,7 @@
       ahri: { name: "Лисичка Ари", avatar: "🦊✨", cost: 5, baseEnergy: 700, rarity: "🟡 Легендарный (5%)", weight: 5 }
     };
 
-    let state = JSON.parse(localStorage.getItem('clown_league_upgrades_v17')) || {
+    let state = JSON.parse(localStorage.getItem('clown_league_upgrades_v18')) || {
       score: 0,
       clickPower: 1,
       passivePower: 0,
@@ -1089,7 +1092,6 @@
     let focusBuffActive = false;
     let dragonBuffActive = false;
 
-    let clickTimestamps = [];
     let clickHistory = [];
     let isBanned = false;
     let banTimer = null;
@@ -1140,7 +1142,7 @@
     const gachaMasteryBtn = document.getElementById('gachaMasteryBtn');
 
     function saveGame() {
-      localStorage.setItem('clown_league_upgrades_v17', JSON.stringify(state));
+      localStorage.setItem('clown_league_upgrades_v18', JSON.stringify(state));
     }
 
     function openModal(id) {
@@ -1273,13 +1275,11 @@
           isBanned = false;
           tapBtn.classList.remove('banned');
           applyHeroStats(state.selectedHero);
-          clickTimestamps = [];
           clickHistory = [];
         }
       }, 1000);
     }
 
-    // Античит проверяет ТОЛЬКО автокликер по одному пикселю (исключая ложные баны на мультитач в 4 пальца)
     function detectAutoClicker(e, now) {
       if (e.isTrusted === false) {
         triggerAntiCheatBan("Script");
@@ -1304,27 +1304,12 @@
         });
 
         if (clusters.length === 1 && clusters[0].count >= 9) {
-          triggerAutoClickerBan("Single-Pixel Bot");
+          triggerAntiCheatBan("Single-Pixel Bot");
           return true;
         }
       }
 
       return false;
-    }
-
-    function triggerAutoClickerBan(reason) {
-      if (isBanned) return;
-      isBanned = true;
-      state.cheatStrikes = (state.cheatStrikes || 0) + 1;
-      const lpLost = Math.floor(state.score * 0.5);
-      state.score = Math.max(0, state.score - lpLost);
-      Sound.ban();
-      triggerShake();
-      saveGame();
-      updateUI();
-      tapBtn.classList.add('banned');
-      avatarEl.textContent = "🛑🤖";
-      charNameEl.textContent = `БАН АВТОКЛИКЕР: ${reason}`;
     }
 
     function updateRankAtmosphere() {
@@ -2013,7 +1998,7 @@
       }, 1200);
     });
 
-    document.getElementById('cardBuyClick').addEventListener('click', () => {
+    cardBuyClick.addEventListener('click', () => {
       if (state.score >= state.costClick) {
         state.score -= state.costClick;
         state.clickPower += 1;
@@ -2024,7 +2009,7 @@
       }
     });
 
-    document.getElementById('cardBuyPassive').addEventListener('click', () => {
+    cardBuyPassive.addEventListener('click', () => {
       if (state.score >= state.costPassive) {
         state.score -= state.costPassive;
         state.passivePower += 2;
