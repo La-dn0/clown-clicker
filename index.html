@@ -621,33 +621,39 @@
       <!-- Вкладка 1 -->
       <div class="guide-pane active" id="guidePane0">
         <div class="guide-section">
-          <div class="guide-title">⚡ Медленная Энергия</div>
+          <div class="guide-title">⚡ Энергия и Сессии</div>
           <div class="guide-text">
-            Каждый клик тратит <b>2 энергии</b>. Регенерация замедлена: <b>+1 энергия каждые 30 секунд</b>. Берегите клики перед боссами или берите руну «Печенька»!
+            Клик тратит <b>2 энергии</b>. Регенерация: <b>+1 энергия каждые 30 секунд</b> (ускоряется за ключи). Следите за запасом перед промо-боссами!
           </div>
         </div>
         <div class="guide-section">
-          <div class="guide-title">🔮 Платные Руны и КД 5 минут</div>
+          <div class="guide-title">🔥 Комбо и Драконий Раж</div>
           <div class="guide-text">
-            Смена руны стоит LP и запускает кулдаун на <b>5 минут</b>. Выбирайте руну осознанно под свой стиль игры.
+            Частые быстрые тапы запускают комбо-множители (<b>x1.5</b> и <b>x2.5</b>). Иногда на арене появляется <b>🐉 Дракон</b>: успейте нажать на него, чтобы получить бонус <b>+50% к урону на 45 сек</b>!
           </div>
         </div>
         <div class="guide-section">
-          <div class="guide-title">🔄 Платный Смурфинг (Престиж)</div>
+          <div class="guide-title">💬 Токсичный чат и Мут</div>
           <div class="guide-text">
-            Доступен с «Дерева I». Покупка смурф-аккаунта стоит <b>2 Ключа 🗝️</b> в обмен на Осколки Мастери.
+            Тимейты внизу экрана постоянно ругаются. Нажав кнопку <b>«Замутить 🔇»</b>, вы наказываете команду и получаете <b>+50% к пассивному доходу LP на 30 сек</b>!
+          </div>
+        </div>
+        <div class="guide-section">
+          <div class="guide-title">🛡️ Античит Vanguard</div>
+          <div class="guide-text">
+            Использование автокликеров и ботов строго запрещено. Система выдает прогрессивный бан и конфискует часть LP.
           </div>
         </div>
         <div class="guide-section">
           <div class="guide-title">🦸 Персонажи и Гача (до 15 ур.)</div>
           <div class="guide-text">
-            • <b>Ясик 0/10:</b> быстрые комбо-серии.<br>
-            • <b>Кот-Хукер:</b> ворует LP каждые 20 сек.<br>
-            • <b>Мальфит:</b> 1500 энергии и x3 урон по боссам.<br>
+            • <b>Ясик 0/10:</b> комбо-кликер.<br>
+            • <b>Кот-Хукер:</b> авто-вор LP каждые 20с.<br>
+            • <b>Мальфит:</b> 1500 энергии, x3 по боссам.<br>
             • <b>Грибовед Тимка:</b> яд-DOT урон по боссу.<br>
             • <b>Дядя Дариус:</b> казнит босса при HP &lt; 15%.<br>
-            • <b>Лисичка Ари:</b> вампиризм энергии (+10 каждые 10 тапов).<br>
-            * Сундук Гачи за <b>4 🔷 Осколка</b> даёт случайного героя или +1 уровень (макс. 15)!
+            • <b>Лисичка Ари:</b> вампиризм энергии.<br>
+            * Гача за <b>4 🔷 Осколка</b> открывает случайного героя или повышает уровень (макс. 15)!
           </div>
         </div>
       </div>
@@ -1048,7 +1054,7 @@
       ahri: { name: "Лисичка Ари", avatar: "🦊✨", cost: 5, baseEnergy: 700, rarity: "🟡 Легендарный (5%)", weight: 5 }
     };
 
-    let state = JSON.parse(localStorage.getItem('clown_league_upgrades_v8')) || {
+    let state = JSON.parse(localStorage.getItem('clown_league_upgrades_v10')) || {
       score: 0,
       clickPower: 1,
       passivePower: 0,
@@ -1132,7 +1138,7 @@
     const gachaMasteryBtn = document.getElementById('gachaMasteryBtn');
 
     function saveGame() {
-      localStorage.setItem('clown_league_upgrades_v8', JSON.stringify(state));
+      localStorage.setItem('clown_league_upgrades_v10', JSON.stringify(state));
     }
 
     function openModal(id) {
@@ -1147,6 +1153,7 @@
       setTimeout(() => { modal.style.display = 'none'; }, 250);
     }
 
+    // Восстановленная функция переключения вкладок гайда
     function switchGuideTab(index) {
       const panes = document.querySelectorAll('.guide-pane');
       const buttons = document.querySelectorAll('.guide-tab-btn');
@@ -1670,27 +1677,32 @@
 
     rankEl.addEventListener('click', openRanksModal);
 
-    // Настоящая интеграция Telegram Stars через генерацию инвойса на бэкенде
+    // Умная функция оплаты: если локально (нет TG/бэкенда) — тест-режим, если в Telegram — реальный openInvoice
     function buyWithStars(type, amount, starsPrice) {
       if (!tg || !tg.openInvoice) {
-        alert(`⭐️ Оплата ${starsPrice} Stars возможна только внутри официального Telegram!`);
+        // Удобный тестовый режим для локальной разработки без бэкенда
+        if (confirm(`[ТЕСТ ОПЛАТЫ НА ЛОКАЛКЕ] Купить +${amount} ${type === 'keys' ? '🗝️ Ключей' : '🔷 Осколков'} за ${starsPrice} ⭐️?`)) {
+          if (type === 'keys') state.keys += amount;
+          else if (type === 'mastery') state.masteryShards += amount;
+          Sound.win();
+          spawnConfettiExplosion();
+          saveGame();
+          updateUI();
+          alert(`🎉 Успешно (тест)! Получено +${amount} ${type === 'keys' ? '🗝️' : '🔷'}!`);
+        }
         return;
       }
 
       const itemName = type === 'keys' ? `${amount} Ключей 🗝️` : `${amount} Осколков Мастери 🔷`;
 
-      // Запрашиваем ссылку инвойса у бэкенда бота
       fetch(`https://your-bot-backend.com/api/create-star-invoice?type=${type}&amount=${amount}&stars=${starsPrice}&userId=${tg.initDataUnsafe?.user?.id || 0}`)
         .then(res => res.json())
         .then(data => {
           if (data.invoiceLink) {
             tg.openInvoice(data.invoiceLink, (status) => {
               if (status === 'paid') {
-                if (type === 'keys') {
-                  state.keys += amount;
-                } else if (type === 'mastery') {
-                  state.masteryShards += amount;
-                }
+                if (type === 'keys') state.keys += amount;
+                else if (type === 'mastery') state.masteryShards += amount;
                 Sound.win();
                 spawnConfettiExplosion();
                 saveGame();
@@ -1703,7 +1715,7 @@
               }
             });
           } else {
-            alert("⚠️ Сервер не смог создать платежную ссылку. Проверьте настройки бэкенда.");
+            alert("⚠️ Сервер не смог создать платежную ссылку.");
           }
         })
         .catch(err => {
@@ -2075,4 +2087,4 @@
     updateUI();
   </script>
 </body>
-  </html>
+</html>
