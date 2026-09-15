@@ -962,7 +962,7 @@
       }
     } catch (e) {}
 
-    // Автоматическое определение адреса сервера
+    // Автоматическое определение текущего хоста (ngrok)
     const BACKEND_URL = window.location.origin;
 
     let soundEnabled = true;
@@ -1241,7 +1241,6 @@
       }, 1000);
     }
 
-    // Античит банит только автокликеры в один пиксель (мультитач не банится)
     function detectAutoClicker(e, now) {
       if (e.isTrusted === false) {
         triggerAntiCheatBan("Script");
@@ -1601,10 +1600,10 @@
 
     rankEl.addEventListener('click', openRanksModal);
 
-    // ВЫЗОВ ОПЛАТЫ ЧЕРЕЗ TELEGRAM STARS
+    // ВЫЗОВ НАСТОЯЩЕЙ ОПЛАТЫ ЧЕРЕЗ TELEGRAM STARS
     function buyWithStars(type, amount, starsPrice) {
       if (!tg || !tg.openInvoice) {
-        alert("⭐️ Оплата звёздами доступна только внутри приложения Telegram!");
+        alert("⭐️ Оплата звёздами доступна только внутри официального приложения Telegram!");
         return;
       }
 
@@ -1612,7 +1611,7 @@
 
       fetch(`${BACKEND_URL}/api/create-star-invoice?type=${type}&amount=${amount}&stars=${starsPrice}&userId=${tg.initDataUnsafe?.user?.id || 0}`)
         .then(res => {
-          if (!res.ok) throw new Error("Backend error");
+          if (!res.ok) throw new Error("Status " + res.status);
           return res.json();
         })
         .then(data => {
@@ -1631,11 +1630,11 @@
               }
             });
           } else {
-            alert("⚠️ Сервер не смог создать ссылку на оплату Stars.");
+            alert("⚠️ Сервер не вернул ссылку на инвойс Stars.");
           }
         })
         .catch(err => {
-          alert("⚠️ Ошибка связи с сервером платежей Telegram Stars.");
+          alert("⚠️ Ошибка создания платежа Stars. Посмотри консоль Python-сервера.");
         });
     }
 
