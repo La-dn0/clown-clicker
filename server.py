@@ -1,32 +1,14 @@
-import asyncio
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
-from aiogram import Bot, Dispatcher, F
-from aiogram.filters import CommandStart
-from aiogram.types import (
-    LabeledPrice,
-    PreCheckoutQuery,
-    Message,
-    InlineKeyboardMarkup,
-    InlineKeyboardButton,
-    WebAppInfo
-)
-import uvicorn
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+import telebot
+from telebot import types
+import threading
 
 BOT_TOKEN = "8765047857:AAF0vWvkEhnqhYfD9MQiaktR7fltZ9WBgLY"
+bot = telebot.TeleBot(BOT_TOKEN)
 
-bot = Bot(token=BOT_TOKEN)
-dp = Dispatcher()
-app = FastAPI()
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+app = Flask(__name__)
+CORS(app)
 
 DONATE_CATALOG = {
     "keys_1": {"title": "Набор Новичка (+1 Ключ)", "amount": 1, "type": "keys", "stars": 25},
@@ -37,67 +19,91 @@ DONATE_CATALOG = {
     "mastery_15": {"title": "Хранилище Мастери (+15 Осколков)", "amount": 15, "type": "mastery", "stars": 220},
 }
 
-@app.get("/", response_class=HTMLResponse)
-async def serve_game():
+# 1. Раздача игры
+@app.route('/')
+def index():
     try:
-        with open("index.html", "r", encoding="utf-8") as f:
+        with open('index.html', 'r', encoding='utf-8') as f:
             return f.read()
     except FileNotFoundError:
-        return "<h1>Файл index.html не найден рядом с server.py!</h1>"
+        return "Файл index.html не найден рядом с server.py!"
 
-@app.get("/api/create-star-invoice")
-async def create_star_invoice(type: str, amount: int, stars: int, userId: int = 0):
-    item_key = f"{type}_{amount}"
+# 2. Генерация нативной ссылки на оплату звёздами Stars
+@app.route('/api/create-star-invoice', methods=['GET'])
+def create_star_invoice():
+    item_type = request.args.get('type')
+    amount = request.args.get('amount', type=int)
+    stars = request.args.get('stars', type=int)
+    user_id = request.args.get('userId', default=0, type=int)
+
+    item_key = f"{item_type}_{amount}"
     item = DONATE_CATALOG.get(item_key)
 
-    title = item["title"] if item else f"Покупка {amount} {type}"
-    description = f"Пополнение баланса: +{amount} ({type})"
-    payload = f"clown_{type}_{amount}_{userId}"
+    title = item["title"] if item else f"Покупка {amount} {item_type}"
+    description = f"Пополнение игрового баланса на +{amount} ({item_type})"
+    payload = f"clown_{item_type}_{amount}_{user_id}"
+
+    prices = [types.LabeledPrice(label=title, amount=stars)]
 
     try:
-        invoice_link = await bot.create_invoice_link(
+        # Генерация нативной ссылки инвойса для WebApp
+        invoice_link = bot.create_invoice_link(
             title=title,
             description=description,
-            payload=payload,
+            invoice_payload=payload,
+            provider_token="",  # Для Stars пустая строка
             currency="XTR",
-            prices=[LabeledPrice(label=title, amount=stars)]
+            prices=prices
         )
-        return {"invoiceLink": invoice_link}
+        return jsonify({"invoiceLink": invoice_link})
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        return jsonify({"error": str(e)}), 500
 
-@dp.message(CommandStart())
-async def start_handler(message: Message):
-    # При публикации/тесте через ngrok укажите здесь HTTPS URL
+# 3. Подтверждение доступности товара
+@bot.pre_checkout_query_handler(func=lambda query: True)
+def process_pre_checkout(pre_checkout_query):
+    bot.answer_pre_checkout_query(pre_checkout_query.id, ok=True)
+
+# 4. Обработка успешного платежа
+@bot.message_handler(content_types=['successful_payment'])
+def process_successful_payment(message):
+    payment_info = message.successful_payment
+    payload_parts = payment_info.invoice_payload.split('_')
+    
+    item_type = payload_parts[1]
+    amount = int(payload_parts[2])
+    stars_paid = payment_info.total_amount
+
+    bot.send_message(
+        message.chat.id, 
+        f"✅ Оплата прошла успешно!\nСписано: {stars_paid} ⭐️\nТовар: +{amount} {item_type}"
+    )
+
+# 5. Кнопка запуска игры при старте бота
+@bot.message_handler(commands=['start'])
+def start_cmd(message):
+    # Укажите рабочий HTTPS адрес (например, ссылку ngrok)
     game_url = "https://your-public-url.ngrok-free.app"
 
-    kb = InlineKeyboardMarkup(
-        inline_keyboard=[
-            [InlineKeyboardButton(text="🎪 Играть в Лигу Клоунов", web_app=WebAppInfo(url=game_url))]
-        ]
-    )
-    await message.answer(
-        "👋 Добро пожаловать в <b>Лигу Клоунов</b>!\n\n"
-        "Нажмите кнопку ниже, чтобы начать играть:",
-        reply_markup=kb,
+    markup = types.InlineKeyboardMarkup()
+    btn = types.InlineKeyboardButton(text="🎪 Играть в Лигу Клоунов", web_app=types.WebAppInfo(url=game_url))
+    markup.add(btn)
+
+    bot.send_message(
+        message.chat.id,
+        "👋 Добро пожаловать в <b>Лигу Клоунов</b>!\nНажмите кнопку ниже, чтобы запустить игру:",
+        reply_markup=markup,
         parse_mode="HTML"
     )
 
-@dp.pre_checkout_query()
-async def process_pre_checkout_query(pre_checkout: PreCheckoutQuery):
-    await bot.answer_pre_checkout_query(pre_checkout.id, ok=True)
+def run_flask():
+    app.run(host='0.0.0.0', port=8000)
 
-@dp.message(F.successful_payment)
-async def process_successful_payment(message: Message):
-    payment = message.successful_payment
-    await message.answer(
-        f"🎉 Успешная покупка!\n"
-        f"Списано: <b>{payment.total_amount} ⭐️</b>"
-    )
+if __name__ == '__main__':
+    # Запускаем веб-сервер в отдельном потоке
+    flask_thread = threading.Thread(target=run_flask)
+    flask_thread.daemon = True
+    flask_thread.start()
 
-@app.on_event("startup")
-async def on_startup():
-    asyncio.create_task(dp.start_polling(bot))
-
-if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    # Запускаем бота
+    bot.infinity_polling()
