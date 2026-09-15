@@ -3,6 +3,7 @@ from flask_cors import CORS
 import telebot
 from telebot import types
 import threading
+import sys
 
 BOT_TOKEN = "8765047857:AAF0vWvkEhnqhYfD9MQiaktR7fltZ9WBgLY"
 bot = telebot.TeleBot(BOT_TOKEN)
@@ -19,71 +20,81 @@ DONATE_CATALOG = {
     "mastery_15": {"title": "Хранилище Мастери (+15 Осколков)", "amount": 15, "type": "mastery", "stars": 220},
 }
 
-# 1. Раздача игры
+# Отдаем clown-cliker.html
 @app.route('/')
 def index():
     try:
-        with open('index.html', 'r', encoding='utf-8') as f:
+        with open('clown-cliker.html', 'r', encoding='utf-8') as f:
             return f.read()
     except FileNotFoundError:
-        return "Файл index.html не найден рядом с server.py!"
+        return "<h1>Файл clown-cliker.html не найден рядом с server.py!</h1>"
 
-# 2. Генерация нативной ссылки на оплату звёздами Stars
+# Генерация инвойса Telegram Stars
 @app.route('/api/create-star-invoice', methods=['GET'])
 def create_star_invoice():
-    item_type = request.args.get('type')
-    amount = request.args.get('amount', type=int)
-    stars = request.args.get('stars', type=int)
-    user_id = request.args.get('userId', default=0, type=int)
-
-    item_key = f"{item_type}_{amount}"
-    item = DONATE_CATALOG.get(item_key)
-
-    title = item["title"] if item else f"Покупка {amount} {item_type}"
-    description = f"Пополнение игрового баланса на +{amount} ({item_type})"
-    payload = f"clown_{item_type}_{amount}_{user_id}"
-
-    prices = [types.LabeledPrice(label=title, amount=stars)]
-
     try:
-        # Генерация нативной ссылки инвойса для WebApp
+        item_type = request.args.get('type')
+        amount = request.args.get('amount', type=int)
+        stars = request.args.get('stars', type=int)
+        user_id = request.args.get('userId', default=0, type=int)
+
+        item_key = f"{item_type}_{amount}"
+        item = DONATE_CATALOG.get(item_key)
+
+        title = item["title"] if item else f"Покупка {amount} {item_type}"
+        description = f"Пополнение игрового баланса на +{amount} ({item_type})"
+        payload = f"clown_{item_type}_{amount}_{user_id}"
+
+        # Для валюты XTR сумма указывается в целых звездах
+        prices = [types.LabeledPrice(label=title, amount=stars)]
+
+        # Для Telegram Stars provider_token передается пустой строкой
         invoice_link = bot.create_invoice_link(
             title=title,
             description=description,
             invoice_payload=payload,
-            provider_token="",  # Для Stars пустая строка
+            provider_token="",
             currency="XTR",
             prices=prices
         )
+        print(f"✅ Успешно создан инвойс Stars: {invoice_link}")
         return jsonify({"invoiceLink": invoice_link})
     except Exception as e:
+        print(f"❌ ОШИБКА ПРИ СОЗДАНИИ СЧЕТА STARS: {e}", file=sys.stderr)
         return jsonify({"error": str(e)}), 500
 
-# 3. Подтверждение доступности товара
+# Обязательное подтверждение предзаказа от Telegram
 @bot.pre_checkout_query_handler(func=lambda query: True)
 def process_pre_checkout(pre_checkout_query):
-    bot.answer_pre_checkout_query(pre_checkout_query.id, ok=True)
+    try:
+        bot.answer_pre_checkout_query(pre_checkout_query.id, ok=True)
+    except Exception as e:
+        print(f"❌ Ошибка в pre_checkout: {e}", file=sys.stderr)
 
-# 4. Обработка успешного платежа
+# Уведомление об успешной оплате в боте
 @bot.message_handler(content_types=['successful_payment'])
 def process_successful_payment(message):
     payment_info = message.successful_payment
     payload_parts = payment_info.invoice_payload.split('_')
     
-    item_type = payload_parts[1]
-    amount = int(payload_parts[2])
+    item_type = payload_parts[1] if len(payload_parts) > 1 else "предмет"
+    amount = payload_parts[2] if len(payload_parts) > 2 else ""
     stars_paid = payment_info.total_amount
 
     bot.send_message(
         message.chat.id, 
-        f"✅ Оплата прошла успешно!\nСписано: {stars_paid} ⭐️\nТовар: +{amount} {item_type}"
+        f"🎉 <b>Оплата прошла успешно!</b>\n"
+        f"Списано: <b>{stars_paid} ⭐️</b>\n"
+        f"Зачислено: <b>+{amount} {item_type}</b>\n\n"
+        f"Открой игру снова, баланс уже обновлен!",
+        parse_mode="HTML"
     )
 
-# 5. Кнопка запуска игры при старте бота
+# Команда /start
 @bot.message_handler(commands=['start'])
 def start_cmd(message):
-    # Укажите рабочий HTTPS адрес (например, ссылку ngrok)
-    game_url = "https://your-public-url.ngrok-free.app"
+    # Актуальная ссылка из ngrok
+    game_url = "https://faceless-reoccupy-reproduce.ngrok-free.dev"
 
     markup = types.InlineKeyboardMarkup()
     btn = types.InlineKeyboardButton(text="🎪 Играть в Лигу Клоунов", web_app=types.WebAppInfo(url=game_url))
@@ -97,13 +108,12 @@ def start_cmd(message):
     )
 
 def run_flask():
-    app.run(host='0.0.0.0', port=8000)
+    app.run(host='0.0.0.0', port=8000, debug=False, use_reloader=False)
 
 if __name__ == '__main__':
-    # Запускаем веб-сервер в отдельном потоке
     flask_thread = threading.Thread(target=run_flask)
     flask_thread.daemon = True
     flask_thread.start()
-
-    # Запускаем бота
+    print("🚀 Сервер Flask запущен на порту 8000")
+    print("🤖 Бот запущен и ожидает запросов...")
     bot.infinity_polling()
