@@ -20,7 +20,7 @@ DONATE_CATALOG = {
     "mastery_15": {"title": "Хранилище Мастери (+15 Осколков)", "amount": 15, "type": "mastery", "stars": 220},
 }
 
-# Отдаем clown-cliker.html
+# Отдача clown-cliker.html
 @app.route('/')
 def index():
     try:
@@ -45,33 +45,33 @@ def create_star_invoice():
         description = f"Пополнение игрового баланса на +{amount} ({item_type})"
         payload = f"clown_{item_type}_{amount}_{user_id}"
 
-        # Для валюты XTR сумма указывается в целых звездах
         prices = [types.LabeledPrice(label=title, amount=stars)]
 
-        # Для Telegram Stars provider_token передается пустой строкой
+        # Для Telegram Stars provider_token вообще не указывается
         invoice_link = bot.create_invoice_link(
             title=title,
             description=description,
             invoice_payload=payload,
-            provider_token="",
             currency="XTR",
             prices=prices
         )
-        print(f"✅ Успешно создан инвойс Stars: {invoice_link}")
+        print(f"\n[УСПЕХ] Инвойс Stars создан: {invoice_link}\n", flush=True)
         return jsonify({"invoiceLink": invoice_link})
     except Exception as e:
-        print(f"❌ ОШИБКА ПРИ СОЗДАНИИ СЧЕТА STARS: {e}", file=sys.stderr)
+        print("\n" + "!" * 50, flush=True)
+        print(f"[ОШИБКА TELEGRAM API]: {repr(e)}", flush=True)
+        print("!" * 50 + "\n", flush=True)
         return jsonify({"error": str(e)}), 500
 
-# Обязательное подтверждение предзаказа от Telegram
+# Подтверждение предзаказа
 @bot.pre_checkout_query_handler(func=lambda query: True)
 def process_pre_checkout(pre_checkout_query):
     try:
         bot.answer_pre_checkout_query(pre_checkout_query.id, ok=True)
     except Exception as e:
-        print(f"❌ Ошибка в pre_checkout: {e}", file=sys.stderr)
+        print(f"[ОШИБКА PRE_CHECKOUT]: {repr(e)}", flush=True)
 
-# Уведомление об успешной оплате в боте
+# Уведомление об успешной оплате
 @bot.message_handler(content_types=['successful_payment'])
 def process_successful_payment(message):
     payment_info = message.successful_payment
@@ -93,7 +93,6 @@ def process_successful_payment(message):
 # Команда /start
 @bot.message_handler(commands=['start'])
 def start_cmd(message):
-    # Актуальная ссылка из ngrok
     game_url = "https://faceless-reoccupy-reproduce.ngrok-free.dev"
 
     markup = types.InlineKeyboardMarkup()
@@ -114,6 +113,5 @@ if __name__ == '__main__':
     flask_thread = threading.Thread(target=run_flask)
     flask_thread.daemon = True
     flask_thread.start()
-    print("🚀 Сервер Flask запущен на порту 8000")
-    print("🤖 Бот запущен и ожидает запросов...")
+    print("Flask запущен на порту 8000. Ожидание кликов...", flush=True)
     bot.infinity_polling()
